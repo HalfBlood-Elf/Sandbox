@@ -14,21 +14,21 @@ namespace DiceRoller
 
 		private Vector3 v3zero = Vector3.zero;
 		private IEnumerator routine;
-		private Dice[] childs;
+		private Dice[] dices;
 		private byte currentSize = 0;
 		private void Start()
 		{
-			childs = new Dice[container.childCount];
+			dices = new Dice[container.childCount];
 			for (int i = 0; i < container.childCount; i++)
 			{
-				childs[i] = container.GetChild(i).GetComponent<Dice>();
+				dices[i] = container.GetChild(i).GetComponent<Dice>();
 			}
 			SetSize((byte)defaultSize);
 		}
 
 		private void FixedUpdate()
 		{
-			foreach (var child in childs)
+			foreach (var child in dices)
 			{
 				if (Vector3.SqrMagnitude(child.transform.position - container.position) > currentSize * currentSize)
 				{
@@ -76,20 +76,45 @@ namespace DiceRoller
 		//		Shake();
 		//	}
 		//}
-
+		private void OnStopShake()
+		{
+			Debug.Log("Stopped");
+			foreach (var dice in dices)
+			{
+				Debug.Log("score: "+ dice.GetCurrentScores());
+			}
+		}
 		private IEnumerator Shaking()
 		{
-			if (container.childCount != childs.Length)
+			if (container.childCount != dices.Length)
 			{
 				Start();
 			}
 
 
-			foreach (var dice in childs)
+			foreach (var dice in dices)
 			{
 				dice.rigidbody.AddForce(Random.insideUnitSphere * shakeForce, ForceMode.VelocityChange);
 			}
+
 			yield return null;
+
+			bool allStopped = false;
+			while (!allStopped)
+			{
+				foreach (var dice in dices)
+				{
+					if (dice.isMoving)
+					{
+						allStopped = false;
+						break;
+					}
+					allStopped = true;
+				}
+				yield return null;
+			}
+
+			OnStopShake();
 		}
 	}
 }
