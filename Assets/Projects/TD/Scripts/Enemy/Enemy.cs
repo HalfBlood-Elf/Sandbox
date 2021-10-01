@@ -13,20 +13,38 @@ public enum EnemyType
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour, IDamageble
 {
+	public event System.Action<Enemy> OnEnemyDied;
+	public float RemainingDistance { get => remainingDistance; }
+	public float MaxHeath { get => maxHealth; }
+	public float CurrentHeath { get => health; }
 	public EnemyType type;
-	public float health = 100;
-	public float maxHealth = 100;
-	public float remainingDistance;
 
+	[SerializeField] private float health = 100;
+	[SerializeField] public float maxHealth = 100;
+	[SerializeField] private float remainingDistance;
 	[SerializeField] private NavMeshAgent agent;
+	[SerializeField] private PoolObject poolObject;
 	private Material mat;
 
-	public event System.Action<Enemy> OnEnemyDied;
-	void Start()
+	private void Start()
 	{
+		poolObject.OnSpawned += PoolObject_OnSpawned;
+		poolObject.OnDespawned += PoolObject_OnDespawned;
+		var meshRenderer = GetComponent<MeshRenderer>();
+		mat = new Material(meshRenderer.sharedMaterial);
+		meshRenderer.material = mat;
+	}
+
+	private void PoolObject_OnDespawned()
+	{
+		gameObject.SetActive(false);
+	}
+
+	private void PoolObject_OnSpawned()
+	{
+		gameObject.SetActive(true);
 		health = maxHealth;
-		mat = new Material(GetComponent<MeshRenderer>().sharedMaterial);
-		GetComponent<MeshRenderer>().material = mat;
+		mat.color = Color.Lerp(Color.red, Color.green, health / maxHealth);
 	}
 
 	void FixedUpdate()

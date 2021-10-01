@@ -129,20 +129,8 @@ public class Tower : MonoBehaviour
 	{
 		if (enemiesInRange.Count > 0)
 		{
-
-			var j = 0;
-			for (int i = 0; i < enemiesInRange.Count; i++)
-			{
-				var enemy = enemiesInRange[i];
-				if (enemy.type == priority)
-				{
-					var temp = enemiesInRange[j];
-					enemiesInRange[j] = enemy;
-					enemiesInRange[i] = temp;
-					j++;
-
-				}
-			}
+			enemiesInRange = enemiesInRange.OrderBy(e => e.RemainingDistance).ToList();
+			
 		}
 		target = enemiesInRange.Count > 0 ? enemiesInRange[0] : null;
 	}
@@ -166,7 +154,7 @@ public class Tower : MonoBehaviour
 			SpecificEnemy,
 		}
 
-		public PriorityType[] priorities;
-
+		public PriorityType priority;
+		public object additionalInfo;
 	}
 }

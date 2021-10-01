@@ -4,19 +4,15 @@ using UnityEngine;
 
 public class SimpleEnemySpawner : MonoBehaviour
 {
-	public GameObject enemyPrefab;
-	public float spawnRange;
-	public float OffsetY;
-	public float waypointOffset = 0;
+	[SerializeField] private Pooler enemyPool;
 
-	float timer;
-	public float enemyFrequency;
-
+	[SerializeField] private float spawnRange;
+	[SerializeField] private float OffsetY;
+	[SerializeField] private float waypointOffset = 0;
+	[SerializeField] private float enemyFrequency;
 	[SerializeField] private EnemyManager enemyManager;
-	void Start()
-	{
 
-	}
+	private float timer;
 
 	// Update is called once per frame
 	void Update()
@@ -37,7 +33,8 @@ public class SimpleEnemySpawner : MonoBehaviour
 			Random.Range(transform.position.x - spawnRange / 2, transform.position.x + spawnRange / 2), 
 			transform.position.y + OffsetY, 
 			Random.Range(transform.position.z - spawnRange / 2, transform.position.z + spawnRange / 2));
-		GameObject gO = Instantiate(enemyPrefab, pos, Quaternion.FromToRotation(Vector3.forward, transform.forward));
+		GameObject gO = enemyPool.GetFirstAvailableObject();
+		gO.transform.position = pos;
 		var enemyScript = gO.GetComponent<Enemy>();
 
 		int type = Random.Range(1, 4);
