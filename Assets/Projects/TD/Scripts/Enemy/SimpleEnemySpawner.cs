@@ -13,8 +13,13 @@ public class SimpleEnemySpawner : MonoBehaviour
 	[SerializeField] private EnemyManager enemyManager;
 
 	private float timer;
+	//private void Start()
+	//{
+	//	var enemy = Spawn();
+	//	enemyManager.AddEnemy(enemy);
 
-	// Update is called once per frame
+	//}
+
 	void Update()
 	{
 		timer += Time.deltaTime;
@@ -26,6 +31,7 @@ public class SimpleEnemySpawner : MonoBehaviour
 		}
 
 	}
+
 	private Enemy Spawn()
 	{
 
@@ -33,8 +39,8 @@ public class SimpleEnemySpawner : MonoBehaviour
 			Random.Range(transform.position.x - spawnRange / 2, transform.position.x + spawnRange / 2), 
 			transform.position.y + OffsetY, 
 			Random.Range(transform.position.z - spawnRange / 2, transform.position.z + spawnRange / 2));
-		GameObject gO = enemyPool.GetFirstAvailableObject();
-		gO.transform.position = pos;
+
+		GameObject gO = enemyPool.SpawnFirstAvailableObject(pos, Quaternion.identity);
 		var enemyScript = gO.GetComponent<Enemy>();
 
 		int type = Random.Range(1, 4);

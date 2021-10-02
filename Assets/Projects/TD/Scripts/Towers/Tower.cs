@@ -66,6 +66,7 @@ public class Tower : MonoBehaviour
 
 	private void Enemy_OnEnemyDiedInRange(Enemy enemy)
 	{
+		if (target == enemy) target = null;
 		enemiesInRange.Remove(enemy);
 	}
 

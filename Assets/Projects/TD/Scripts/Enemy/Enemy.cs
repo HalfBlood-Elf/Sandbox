@@ -11,40 +11,30 @@ public enum EnemyType
 	Tank = 3
 }
 [RequireComponent(typeof(NavMeshAgent))]
-public class Enemy : MonoBehaviour, IDamageble
+public class Enemy : Pooler.PoolObject, IDamageble
 {
 	public event System.Action<Enemy> OnEnemyDied;
 	public float RemainingDistance { get => remainingDistance; }
 	public float MaxHeath { get => maxHealth; }
 	public float CurrentHeath { get => health; }
+	public override bool isAvailableForSpawn { get; set; }
+	public override Pooler Pool { get; set; }
+
 	public EnemyType type;
 
 	[SerializeField] private float health = 100;
 	[SerializeField] public float maxHealth = 100;
 	[SerializeField] private float remainingDistance;
 	[SerializeField] private NavMeshAgent agent;
-	[SerializeField] private PoolObject poolObject;
 	private Material mat;
-
+	private bool startDone;
 	private void Start()
 	{
-		poolObject.OnSpawned += PoolObject_OnSpawned;
-		poolObject.OnDespawned += PoolObject_OnDespawned;
+		if (startDone) return;
 		var meshRenderer = GetComponent<MeshRenderer>();
 		mat = new Material(meshRenderer.sharedMaterial);
 		meshRenderer.material = mat;
-	}
-
-	private void PoolObject_OnDespawned()
-	{
-		gameObject.SetActive(false);
-	}
-
-	private void PoolObject_OnSpawned()
-	{
-		gameObject.SetActive(true);
-		health = maxHealth;
-		mat.color = Color.Lerp(Color.red, Color.green, health / maxHealth);
+		startDone = true;
 	}
 
 	void FixedUpdate()
@@ -71,7 +61,7 @@ public class Enemy : MonoBehaviour, IDamageble
 	private void Die()
 	{
 		OnEnemyDied?.Invoke(this);
-		Destroy(gameObject);
+		Pool.ReturnToPool(this);
 	}
 
 	public void ApplyDamage(float dmg, System.Action<float> onDmgDone, System.Action<int> onKill)
@@ -90,5 +80,20 @@ public class Enemy : MonoBehaviour, IDamageble
 
 	}
 
-	
+	public override void Spawned()
+	{
+		if (!startDone)
+			Start();
+		gameObject.SetActive(true);
+		agent.enabled = true;
+		health = maxHealth;
+		mat.color = Color.Lerp(Color.red, Color.green, health / maxHealth);
+	}
+
+	public override void Despawned()
+	{
+		gameObject.SetActive(false);
+		agent.enabled = false;
+	}
+
 }
