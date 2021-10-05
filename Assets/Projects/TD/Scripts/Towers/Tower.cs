@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-
+using System;
 
 public class Tower : MonoBehaviour
 {
@@ -13,19 +13,23 @@ public class Tower : MonoBehaviour
 	public float damage = 10;
 	public int kills = 0;
 
-	public GameObject muzzlePref;
-	public Transform[] guns;
+	[SerializeField] private Transform[] guns;
 	[SerializeField] private string enemyTag = "Enemy";
-	[SerializeField] private Enemy target;
-	[SerializeField] private List<Enemy> enemiesInRange = new List<Enemy>();
 	[SerializeField] private Transform towerGun;
 	[SerializeField] private Transform rayCastPos;
 
 	[SerializeField] private TriggerEvents triggerEvents;
 	[SerializeField] private Transform rangeSphere;
-	private float timer = 0;
-	private Transform muzzlePos;
+
+	[SerializeField] private Pooler muzzleFlashPool;
+	[SerializeField] private ProjectileSettings projectileSettings;
+	[SerializeField] private Pooler bulletsPool;
+
+
+	private float? lastShotTime = null;
 	private bool leftGun = true;
+	private Enemy target;
+	private List<Enemy> enemiesInRange = new List<Enemy>();
 
 	private void OnEnable()
 	{
@@ -70,11 +74,8 @@ public class Tower : MonoBehaviour
 		enemiesInRange.Remove(enemy);
 	}
 
-	void FixedUpdate()
+	private void Update()
 	{
-		timer += Time.deltaTime;
-		if (timer > 100)
-			timer = 100;
 		var triggerSphere = triggerEvents.Trigger as SphereCollider;
 		triggerSphere.radius = range;
 		rangeSphere.localScale = new Vector3(range, range, range);
@@ -82,10 +83,9 @@ public class Tower : MonoBehaviour
 		//
 		if (target != null)//looking on target
 		{
-			towerGun.transform.LookAt(target.transform);
-			towerGun.transform.eulerAngles = new Vector3(towerGun.transform.eulerAngles.x, towerGun.transform.eulerAngles.y, towerGun.transform.eulerAngles.z);
-			towerGun.transform.localEulerAngles += new Vector3(90, 0, 0);
-			Shot(rayCastPos.transform.forward);
+			towerGun.LookAt(target.transform);
+			towerGun.localEulerAngles += new Vector3(90, 0, 0);
+			ShootOnce(rayCastPos.forward);
 		}
 		else
 		{
@@ -94,35 +94,51 @@ public class Tower : MonoBehaviour
 
 	}
 
-
-
-	void Shot(Vector3 direction)
+	private void ShootOnce(Vector3 forward)
 	{
-		if (timer >= reloadTime)
+		if (!lastShotTime.HasValue || Time.time - lastShotTime.Value >= reloadTime)
 		{
-			RaycastHit hit;
-			Ray ray = new Ray(rayCastPos.position, direction);
-			Physics.Raycast(ray, out hit);
-			Debug.DrawLine(ray.origin, hit.point, Color.green, 0.2f);
 
-			muzzlePos = (leftGun) ? guns[0] : guns[1];
-			var hitFlash = Instantiate(muzzlePref, muzzlePos);
-			hitFlash.transform.localScale = new Vector3(.1f, .1f, .1f);
-			var flash = hitFlash.GetComponent<MuzzleFlash>();
-			flash.lifeTime = 0.05f;
-			flash.scaleModifier = 0.02f;
+			var muzzlePos = (leftGun) ? guns[0] : guns[1];
+			var hitFlash = muzzleFlashPool.GetFirstAvailableObject();
+			hitFlash.transform.parent = muzzlePos;
+			hitFlash.transform.localPosition = Vector3.zero;
+			hitFlash.transform.localRotation = Quaternion.identity;
+			hitFlash.Spawned();
+			//hitFlash.transform.localScale = new Vector3(.1f, .1f, .1f);
+			//var flash = hitFlash.GetComponent<MuzzleFlash>();
+
+			//ShootRaycast(forward);
+			ShotBullet(muzzlePos);
+
 			leftGun = !leftGun;
-			var damageble = hit.transform.GetComponent<IDamageble>();
-			if(damageble != null)
-			{
-				damageble.ApplyDamage(damage, null, (newKills) => kills += newKills);
-			}
-			else
-			{
-				Debug.Log($"tower {name} hit {hit.transform.name}");
-			}
-			
-			timer = 0;
+			lastShotTime = Time.time;
+		}
+	}
+
+	private void ShotBullet(Transform shotPos)
+	{
+		var bulletObj = bulletsPool.SpawnFirstAvailableObject(shotPos.position, shotPos.rotation);
+		var bullet = bulletObj.GetComponent<Projectile>();
+		bullet.Setup(projectileSettings, null, (newKills) => kills += newKills);
+	}
+
+
+	private void ShootRaycast(Vector3 direction)
+	{
+		RaycastHit hit;
+		Ray ray = new Ray(rayCastPos.position, direction);
+		Physics.Raycast(ray, out hit);
+		Debug.DrawLine(ray.origin, hit.point, Color.green, 0.2f);
+
+		var damageble = hit.transform.GetComponent<IDamageble>();
+		if(damageble != null)
+		{
+			damageble.ApplyDamage(damage, null, (newKills) => kills += newKills);
+		}
+		else
+		{
+			Debug.Log($"tower {name} hit {hit.transform.name}");
 		}
 	}
 

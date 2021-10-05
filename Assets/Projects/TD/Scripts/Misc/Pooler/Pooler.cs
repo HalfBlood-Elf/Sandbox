@@ -6,7 +6,7 @@ using UnityEditor;
 
 public class Pooler : MonoBehaviour
 {
-	[SerializeField, SerializeReference] private PoolObject poolPrefab;
+	[SerializeField] private PoolObject poolPrefab;
 	[SerializeField] private uint preLoadItemsCount = 20;
 	private List<PoolObject> pool = new List<PoolObject>();
 
@@ -59,8 +59,8 @@ public class Pooler : MonoBehaviour
 
 	public abstract class PoolObject: MonoBehaviour
 	{
-		public abstract bool isAvailableForSpawn { get; set; }
-		public abstract Pooler Pool { get; set; }
+		public virtual bool isAvailableForSpawn { get; set; }
+		public virtual Pooler Pool { get; set; }
 		public abstract void Spawned();
 		public abstract void Despawned();
 	}

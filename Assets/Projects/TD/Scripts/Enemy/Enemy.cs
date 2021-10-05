@@ -10,6 +10,7 @@ public enum EnemyType
 	Fast = 2,
 	Tank = 3
 }
+
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : Pooler.PoolObject, IDamageble
 {
@@ -17,8 +18,6 @@ public class Enemy : Pooler.PoolObject, IDamageble
 	public float RemainingDistance { get => remainingDistance; }
 	public float MaxHeath { get => maxHealth; }
 	public float CurrentHeath { get => health; }
-	public override bool isAvailableForSpawn { get; set; }
-	public override Pooler Pool { get; set; }
 
 	public EnemyType type;
 
@@ -28,6 +27,7 @@ public class Enemy : Pooler.PoolObject, IDamageble
 	[SerializeField] private NavMeshAgent agent;
 	private Material mat;
 	private bool startDone;
+
 	private void Start()
 	{
 		if (startDone) return;
