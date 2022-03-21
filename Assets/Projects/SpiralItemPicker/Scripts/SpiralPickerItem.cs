@@ -4,15 +4,10 @@ using UnityEngine;
 
 public class SpiralPickerItem : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+	[SerializeField] private Transform itemImageContainer;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public void CompensateForParentRotation(float angle)
+	{
+		itemImageContainer.localRotation = Quaternion.Euler(0,0,-angle);
+	}
 }
