@@ -31,7 +31,9 @@ namespace SpiralPicker
             public float arrowRotationOffset;
             public float arrowRadius;
             public FacingDirection arrowFacingDirection;
-
+            [Header("Animation")]
+            public bool isDesceteTransition;
+            
         }
 
 
@@ -56,43 +58,56 @@ namespace SpiralPicker
             wingsSlotsToFade = 3,
             minAlpha = .3f,
             slotFacingDirection = FacingDirection.UP,
+            isDesceteTransition = true,
         };
 
         [SerializeField] private float zeroHourAngle = -60;
-        [SerializeField] private int selectedHour = 0;
         [SerializeField] private Transform arrow;
         [SerializeField] private Transform slotsContainer;
         [SerializeField] private SpiralPickerItem slotPrefab;
         [SerializeField] private SpiralPickerItem[] slots;
-
+        [SerializeField] private float debug;
 
         private int selectedSlotIndex = 0;
 
         private RectTransform rectTransform => transform as RectTransform;
 
-        private void Start()
-        {
+        //private void Start()
+        //{
 
-            //var radAngle = (-paddingGrad * Mathf.Deg2Rad) * 0 + startAngle;
-            ////Debug.Log(radius * Mathf.Cos(radAngle));
-            //radAngle = (-paddingGrad * Mathf.Deg2Rad) * 6 + startAngle;
-            //Debug.Log(radius * Mathf.Cos(radAngle));
-        }
+        //    //var radAngle = (-paddingGrad * Mathf.Deg2Rad) * 0 + startAngle;
+        //    ////Debug.Log(radius * Mathf.Cos(radAngle));
+        //    //radAngle = (-paddingGrad * Mathf.Deg2Rad) * 6 + startAngle;
+        //    //Debug.Log(radius * Mathf.Cos(radAngle));
+        //}
 
         private void Update()
         {
-            PlaceSlots(selectedHour); //to setup parameters
+            //PlaceSlots(selectedHour); //to setup parameters
+            UpdateInputDirection();
         }
 
         private void UpdateInputDirection()
         {
             Vector3 userInputDirection = (Input.mousePosition - rectTransform.position).normalized;
+            var inputAngle = Mathf.Atan2(userInputDirection.x, userInputDirection.y) * Mathf.Rad2Deg;
+            if (inputAngle < 0) inputAngle += 360f;
+            debug = inputAngle;
 
+            var halfPadding = settings.paddingDeg / 2f;
+            for (int i = 0; i < ItemsCountBase; i++)
+            {
+                if(inputAngle < halfPadding + (i * settings.paddingDeg))
+                {
+                    PlaceSlots(i);
+                    break;
+                }
+            }
         }
 
-        private void PlaceSlots(int selectedHour)
+        private void PlaceSlots(float selectedHour)
         {
-            if (selectedHour > 12) selectedHour %= ItemsCountBase;
+            if (selectedHour > ItemsCountBase || selectedHour < -ItemsCountBase) selectedHour %= ItemsCountBase;
             var startAngleDeg = zeroHourAngle + (selectedHour * settings.paddingDeg);
 
             int rightWingSlotsIndexStart = slots.Length - settings.wingsSlotsToFade - 1;
@@ -131,7 +146,7 @@ namespace SpiralPicker
 
             if(arrow != null)
             {
-                var radAngle = (startAngleDeg + settings.arrowRotationOffset) * Mathf.Deg2Rad;
+                var radAngle = -(startAngleDeg + settings.arrowRotationOffset) * Mathf.Deg2Rad;
                 var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
                 arrow.localPosition = posDirection * settings.arrowRadius;
                 float rotationZ = FaceObjectAngleDeg(slotsContainer.localPosition, arrow.localPosition, settings.arrowFacingDirection);
@@ -139,9 +154,12 @@ namespace SpiralPicker
             }
         }
 
-        private void SpawnSlotsHolders(
-            int wingsSlotsshown,
-            System.Func<Transform, SpiralPickerItem> spawnCallback)
+
+
+
+
+
+        private void SpawnSlotsHolders(int wingsSlotsshown, System.Func<Transform, SpiralPickerItem> spawnCallback)
         {
             var totalSlotsCount = 1 + wingsSlotsshown + wingsSlotsshown;
 
@@ -201,7 +219,7 @@ namespace SpiralPicker
                         ts[i].SpawnSlotsHolders(
                             ts[i].settings.wingsSlotsShown,
                             (parent) => CreatePrefab(ts[i].slotPrefab, parent));
-                        ts[i].PlaceSlots(ts[i].selectedHour);
+                        ts[i].PlaceSlots(0);
                         Undo.CollapseUndoOperations(undoGroupIndex);
                     }
                 }
