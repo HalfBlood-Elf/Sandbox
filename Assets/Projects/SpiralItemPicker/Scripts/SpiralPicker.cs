@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine.UI;
 
 #if UNITY_EDITOR
@@ -12,169 +14,148 @@ namespace SpiralPicker
 {
     public class SpiralPicker : MonoBehaviour
     {
-        [System.Serializable]
-        public struct SpiralSettings
-        {
-            public float minRadius;
-            public float maxRadius;
-            public float minScale;
-            public float maxScale;
-
-            public float paddingDeg;
-            [Tooltip("How many items to the left/right of the selected item")]
-            public int wingsSlotsShown;
-            public int wingsSlotsToFade;
-            public float minAlpha;
-            [Space()]
-            public FacingDirection slotFacingDirection;
-            [Header("Arrow settings")]
-            public float arrowRotationOffset;
-            public float arrowRadius;
-            public FacingDirection arrowFacingDirection;
-            [Header("Animation")]
-            public bool isDesceteTransition;
-            
-        }
-
-
-        private const int ItemsCountBase = 12;
+        private const int ITEMS_COUNT_BASE = 12;
 
         public enum FacingDirection
         {
-            UP = 270,
-            DOWN = 90,
-            LEFT = 180,
-            RIGHT = 0
+            Up = 270,
+            Down = 90,
+            Left = 180,
+            Right = 0
         }
 
-        [SerializeField] private SpiralSettings settings = new SpiralSettings
+        [SerializeField] private SpiralSettings _spiralSettings = new()
         {
-            minRadius = 263.4f,
-            maxRadius = 479.46f,
-            minScale = .67f,
-            maxScale = 1.33f,
-            paddingDeg = 30,
-            wingsSlotsShown = 7,
-            wingsSlotsToFade = 3,
-            minAlpha = .3f,
-            slotFacingDirection = FacingDirection.UP,
-            isDesceteTransition = true,
+            MinRadius = 263.4f,
+            MaxRadius = 479.46f,
+            MinScale = .67f,
+            MaxScale = 1.33f,
+            PaddingDeg = 30,
+            WingsSlotsShown = 7,
+            WingsSlotsToFade = 3,
+            MinAlpha = .3f,
+            MaxAlpha = 1f,
+            SlotFacingDirection = FacingDirection.Up,
         };
 
-        [SerializeField] private float zeroHourAngle = -60;
-        [SerializeField] private Transform arrow;
-        [SerializeField] private Transform slotsContainer;
-        [SerializeField] private SpiralPickerItem slotPrefab;
-        [SerializeField] private SpiralPickerItem[] slots;
-        [SerializeField] private float debug;
+        [SerializeField] private ArrowSettings _arrowSettings = new()
+        {
+            ArrowRadius = 235,
+            ArrowRotationOffset = -30,
+            ArrowFacingDirection = FacingDirection.Right
+        };
+        [SerializeField] private float _zeroHourAngle = -60;
+        [SerializeField] private Transform _arrowTransform;
+        [SerializeField] private Transform _slotsContainer;
+        [SerializeField] private SpiralPickerItem _slotPrefab;
+        [SerializeField] private SpiralPickerItem[] _slots;
 
-        private int selectedSlotIndex = 0;
+        private RectTransform RectTransform => transform as RectTransform;
 
-        private RectTransform rectTransform => transform as RectTransform;
-
-        //private void Start()
-        //{
-
-        //    //var radAngle = (-paddingGrad * Mathf.Deg2Rad) * 0 + startAngle;
-        //    ////Debug.Log(radius * Mathf.Cos(radAngle));
-        //    //radAngle = (-paddingGrad * Mathf.Deg2Rad) * 6 + startAngle;
-        //    //Debug.Log(radius * Mathf.Cos(radAngle));
-        //}
+        private void OnValidate()
+        {
+            var targetPos = RectTransform.position;
+            targetPos.y += 10;
+            UpdateInputDirection(targetPos);
+        }
 
         private void Update()
         {
-            //PlaceSlots(selectedHour); //to setup parameters
-            UpdateInputDirection();
+            UpdateInputDirection(Input.mousePosition);
         }
 
-        private void UpdateInputDirection()
+        public void ShowItems(ISpiralPickerItem[] items, bool isCyclic)
         {
-            Vector3 userInputDirection = (Input.mousePosition - rectTransform.position).normalized;
+            
+        }
+
+        private void UpdateInputDirection(Vector3 mousePosition)
+        {
+            Vector3 userInputDirection = (mousePosition - RectTransform.position).normalized;
             var inputAngle = Mathf.Atan2(userInputDirection.x, userInputDirection.y) * Mathf.Rad2Deg;
             if (inputAngle < 0) inputAngle += 360f;
-            debug = inputAngle;
 
-            var halfPadding = settings.paddingDeg / 2f;
-            for (int i = 0; i < ItemsCountBase; i++)
+            var halfPadding = _spiralSettings.PaddingDeg / 2f;
+            for (int i = 0; i < ITEMS_COUNT_BASE; i++)
             {
-                if(inputAngle < halfPadding + (i * settings.paddingDeg))
-                {
-                    PlaceSlots(i);
-                    break;
-                }
+                if (inputAngle > halfPadding + (i * _spiralSettings.PaddingDeg)) continue;
+                PlaceSlots(i);
+                break;
             }
         }
 
         private void PlaceSlots(float selectedHour)
         {
-            if (selectedHour > ItemsCountBase || selectedHour < -ItemsCountBase) selectedHour %= ItemsCountBase;
-            var startAngleDeg = zeroHourAngle + (selectedHour * settings.paddingDeg);
+            if (selectedHour is > ITEMS_COUNT_BASE or < -ITEMS_COUNT_BASE) selectedHour %= ITEMS_COUNT_BASE;
+            var startAngleDeg = _zeroHourAngle + (selectedHour * _spiralSettings.PaddingDeg);
 
-            int rightWingSlotsIndexStart = slots.Length - settings.wingsSlotsToFade - 1;
-            for (int i = 0; i < slots.Length; i++)
+            int rightWingSlotsIndexStart = _slots.Length - _spiralSettings.WingsSlotsToFade - 1;
+            for (int i = 0; i < _slots.Length; i++)
             {
-                float indexNormalised = ((float)i) / slots.Length;
+                float indexNormalised = ((float)i) / _slots.Length;
 
-                var slot = slots[i];
+                var slot = _slots[i];
 
-                float targetAngle = -settings.paddingDeg * i + -startAngleDeg - (float)settings.slotFacingDirection;
+                float targetAngle = -_spiralSettings.PaddingDeg * i + -startAngleDeg - (float)_spiralSettings.SlotFacingDirection;
 
-                float radius = Mathf.Lerp(settings.minRadius, settings.maxRadius, indexNormalised);
+                float radius = Mathf.Lerp(_spiralSettings.MinRadius, _spiralSettings.MaxRadius, indexNormalised);
                 float radAngle = targetAngle * Mathf.Deg2Rad;
                 var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
-                slot.transform.localPosition = posDirection * radius;
+                var targetPosition = posDirection * radius;
+                slot.transform.localPosition = targetPosition;
 
-                float rotationZ = FaceObjectAngleDeg(slotsContainer.localPosition, slot.transform.localPosition, settings.slotFacingDirection);
+                float rotationZ = FaceObjectAngleDeg(_slotsContainer.localPosition, targetPosition, _spiralSettings.SlotFacingDirection);
                 slot.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
                 slot.CompensateForParentRotation(rotationZ);
 
                 
-                float scaleIndex = Mathf.Lerp(settings.minScale, settings.maxScale, indexNormalised);
+                float scaleIndex = Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, indexNormalised);
                 slot.transform.localScale = Vector3.one * scaleIndex;
 
                 // fading of left and right "wings"
-                bool inLefFadetWing = i < settings.wingsSlotsToFade;
+                bool inLeftFadeWing = i < _spiralSettings.WingsSlotsToFade;
                 bool inRightFadeWing = i > rightWingSlotsIndexStart;
-                if (inLefFadetWing || inRightFadeWing)
+                if (inLeftFadeWing || inRightFadeWing)
                 {
-                    float t_left = (float)i / settings.wingsSlotsToFade;
-                    float t_right = (slots.Length - i) / (float)settings.wingsSlotsToFade;
+                    float tLeft = (float)i / _spiralSettings.WingsSlotsToFade;
+                    float tRight = (_slots.Length - i) / (float)_spiralSettings.WingsSlotsToFade;
 
-                    slot.SetAlpha(Mathf.Lerp(settings.minAlpha, 1, inLefFadetWing? t_left : t_right));
+                    slot.SetAlpha(Mathf.Lerp(_spiralSettings.MinAlpha, _spiralSettings.MaxAlpha, inLeftFadeWing? tLeft : tRight));
                 }
             }
 
-            if(arrow != null)
-            {
-                var radAngle = -(startAngleDeg + settings.arrowRotationOffset) * Mathf.Deg2Rad;
-                var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
-                arrow.localPosition = posDirection * settings.arrowRadius;
-                float rotationZ = FaceObjectAngleDeg(slotsContainer.localPosition, arrow.localPosition, settings.arrowFacingDirection);
-                arrow.localRotation = Quaternion.Euler(0, 0, rotationZ);
-            }
+            HandleArrow(startAngleDeg);
         }
 
-
-
-
+        private void HandleArrow(float startAngleDeg)
+        {
+            if (!_arrowTransform) return;
+            
+            var radAngle = -(startAngleDeg + _arrowSettings.ArrowRotationOffset) * Mathf.Deg2Rad;
+            var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
+            _arrowTransform.localPosition = posDirection * _arrowSettings.ArrowRadius;
+            float rotationZ = FaceObjectAngleDeg(_slotsContainer.localPosition, _arrowTransform.localPosition,
+                _arrowSettings.ArrowFacingDirection);
+            _arrowTransform.localRotation = Quaternion.Euler(0, 0, rotationZ);
+        }
 
 
         private void SpawnSlotsHolders(int wingsSlotsshown, System.Func<Transform, SpiralPickerItem> spawnCallback)
         {
             var totalSlotsCount = 1 + wingsSlotsshown + wingsSlotsshown;
 
-            slots = new SpiralPickerItem[totalSlotsCount];
+            _slots = new SpiralPickerItem[totalSlotsCount];
             for (int i = 0; i < totalSlotsCount; i++)
             {
-                SpiralPickerItem item = spawnCallback(slotsContainer);
-                slots[i] = item;
+                SpiralPickerItem item = spawnCallback(_slotsContainer);
+                _slots[i] = item;
             }
         }
 
         private void ClearSpawnedSlots(System.Action<GameObject> destroyHandler)
         {
             //Undo.RecordObject(towerCreator, "Delete Created Floors");
-            var childs = slotsContainer.Cast<Transform>().ToArray();
+            var childs = _slotsContainer.Cast<Transform>().ToArray();
 
             for (int i = 0; i < childs.Length; i++)
             {
@@ -190,38 +171,63 @@ namespace SpiralPicker
             return angle;
         }
 
+        [System.Serializable]
+        public struct SpiralSettings
+        {
+            public float MinRadius;
+            public float MaxRadius;
+            public float MinScale;
+            public float MaxScale;
+
+            public float PaddingDeg;
+            [Tooltip("How many items to the left/right of the selected item")]
+            public int WingsSlotsShown;
+            public int WingsSlotsToFade;
+            [Range(0,1)]public float MinAlpha;
+            [Range(0,1)]public float MaxAlpha;
+            [Space()]
+            public FacingDirection SlotFacingDirection;
+        }
+
+        [System.Serializable]
+        public struct ArrowSettings
+        {
+            
+            public float ArrowRotationOffset;
+            public float ArrowRadius;
+            public FacingDirection ArrowFacingDirection;
+        }
 
 #if UNITY_EDITOR
         [CustomEditor(typeof(SpiralPicker)), CanEditMultipleObjects]
-        public class SpiralPicker_Editor : Editor
+        public class SpiralPickerEditor : Editor
         {
-            private SpiralPicker[] ts;
+            private SpiralPicker[] _targets;
 
             private void OnEnable()
             {
-                ts = targets.Cast<SpiralPicker>().ToArray();
+                _targets = targets.Cast<SpiralPicker>().ToArray();
             }
 
             public override void OnInspectorGUI()
             {
                 base.OnInspectorGUI();
 
-                if (GUILayout.Button("Recreate slots"))
+                if (!GUILayout.Button("Recreate slots")) return;
+                for (int i = 0; i < _targets.Length; i++)
                 {
-                    for (int i = 0; i < ts.Length; i++)
-                    {
-                        Undo.IncrementCurrentGroup();
-                        Undo.SetCurrentGroupName("Create radial slots");
-                        var undoGroupIndex = Undo.GetCurrentGroup();
+                    Undo.IncrementCurrentGroup();
+                    Undo.SetCurrentGroupName("Create radial slots");
+                    var undoGroupIndex = Undo.GetCurrentGroup();
 
-                        ts[i].ClearSpawnedSlots((go) => Destroy(go));
+                    _targets[i].ClearSpawnedSlots(Destroy);
 
-                        ts[i].SpawnSlotsHolders(
-                            ts[i].settings.wingsSlotsShown,
-                            (parent) => CreatePrefab(ts[i].slotPrefab, parent));
-                        ts[i].PlaceSlots(0);
-                        Undo.CollapseUndoOperations(undoGroupIndex);
-                    }
+                    var capturedI = i;
+                    _targets[i].SpawnSlotsHolders(
+                        _targets[i]._spiralSettings.WingsSlotsShown,
+                        (parent) => CreatePrefab(_targets[capturedI]._slotPrefab, parent));
+                    _targets[i].PlaceSlots(0);
+                    Undo.CollapseUndoOperations(undoGroupIndex);
                 }
             }
 
@@ -239,5 +245,9 @@ namespace SpiralPicker
 
         }
 #endif
+    }
+
+    public interface ISpiralPickerItem
+    {
     }
 }
