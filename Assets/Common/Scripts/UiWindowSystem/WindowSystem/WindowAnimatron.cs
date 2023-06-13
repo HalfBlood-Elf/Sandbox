@@ -6,12 +6,14 @@ namespace Ui.WindowSystem
 {
     public class WindowAnimatron : MonoBehaviour
     {
-        public virtual Tween Show() => DOTween.Sequence();
+        public virtual Tween AnimationSequence => DOTween.Sequence();
+        public virtual void SetBeforeAnimationState() { }
 
-        public virtual Tween Hide() => DOTween.Sequence();
-
-        public virtual void Shown() {}
-
-        public virtual void Hidden() { }
+        public Sequence AppendAnimation(Sequence sequence)
+        {
+            sequence.AppendCallback(SetBeforeAnimationState);
+            sequence.Append(AnimationSequence);
+            return sequence;
+        }
     }
 }

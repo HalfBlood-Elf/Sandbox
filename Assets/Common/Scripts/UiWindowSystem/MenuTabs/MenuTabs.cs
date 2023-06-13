@@ -7,8 +7,8 @@ using UnityEngine.UI;
 
 namespace Ui.WindowSystem
 {
-	public class MenuTabs : MonoBehaviour
-	{
+    public class MenuTabs : MonoBehaviour
+    {
         [SerializeField] private Transform tabButtonsContainer;
         [SerializeField] private MenuTabButton tabButtonPrefab;
         [SerializeField] private ScrollRect scrollRect;
@@ -31,7 +31,6 @@ namespace Ui.WindowSystem
                 button.transform.SetAsLastSibling();
                 activeTabButtons.Add(button);
             }
-
         }
 
         private void OnEnable()
@@ -55,14 +54,12 @@ namespace Ui.WindowSystem
         }
 
         [System.Serializable]
-		public class Tab
-		{
-			[Tooltip("Tab name")]
-			public string name;
-			public Window window;
+        public class Tab
+        {
+            [Tooltip("Tab name")] public string name;
+            public Window window;
 
             //todo: editor onvalidate for buttons with target names
         }
-	}
+    }
 }
-

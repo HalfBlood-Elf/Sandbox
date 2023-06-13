@@ -1,6 +1,5 @@
 ﻿using DG.Tweening;
 using System;
-using System.Collections;
 using UnityEngine;
 
 namespace Ui.WindowSystem
@@ -11,37 +10,65 @@ namespace Ui.WindowSystem
         public WindowAnimatron OnHide;
 
         public bool IsActive => gameObject.activeInHierarchy;
-        public virtual void Show(Action callback = null)
+        
+        public virtual void Show(object infoToShow = null, Action callback = null)
         {
             if (IsActive) return;
-            var sequence = DOTween.Sequence();
-            sequence.OnComplete(() => callback?.Invoke());
-            if (OnShow)
-            {
-                sequence.AppendCallback(() => OnShow.Hidden());
-                sequence.Append(OnShow.Show());
-            }
-            else
-            {
-                sequence.AppendCallback(() => gameObject.SetActive(true));
-            }
-            sequence.Play();
+            var sequence = DOTween.Sequence()
+                .AppendCallback(() => OnSetInfoToShow(infoToShow))
+                .AppendCallback(OnShowing)
+                .AppendCallback(ActivateObject);
+            if (OnShow) OnShow.AppendAnimation(sequence);
+            
+            sequence.OnComplete(() =>
+                {
+                    callback?.Invoke();
+                    OnShown();
+                })
+            .Play();
         }
+
         public virtual void Hide(Action callback = null)
         {
             if (!IsActive) return;
             var sequence = DOTween.Sequence();
-            sequence.OnComplete(() => callback?.Invoke());
-            if (OnHide)
+            sequence.AppendCallback(OnHiding);
+            
+            if (OnHide) OnHide.AppendAnimation(sequence);
+            sequence.AppendCallback(DeactivateObject);
+            
+            sequence.OnComplete(() =>
             {
-                sequence.AppendCallback(() => OnHide.Shown());
-                sequence.Append(OnHide.Hide());
-            }
-            else
-            {
-                sequence.AppendCallback(() => gameObject.SetActive(false));
-            }
+                callback?.Invoke();
+                OnHidden();
+            });
             sequence.Play();
         }
+
+        private void OnDestroy()
+        {
+            if(IsActive) Hide();
+        }
+
+        protected virtual void DeactivateObject()
+        {
+            gameObject.SetActive(false);
+        }
+
+        protected virtual void ActivateObject()
+        {
+            gameObject.SetActive(true);
+        }
+
+
+        protected virtual void OnSetInfoToShow(object infoToShow)
+        {
+        }
+        
+        protected virtual void OnShowing() {}
+        protected virtual void OnShown() {}
+        protected virtual void OnHiding() {}
+        protected virtual void OnHidden() {}
+        
     }
 }

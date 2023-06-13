@@ -11,13 +11,14 @@ namespace Ui.WindowSystem
         {
         }
 
-        public override Window Show(string windowIdentity, Action callback = null)
+        public override Window Show(string windowIdentity, object infoToShow = null, Action callback = null)
         {
-            foreach (var window in _windows.Values)
+            foreach (var (identity,window) in _windows)
             {
+                if(identity == windowIdentity) continue;
                 window.Hide();
             }
-            return base.Show(windowIdentity, callback);
+            return base.Show(windowIdentity, infoToShow, callback);
         }
     }
 }
