@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using DG.Tweening;
 using UnityEngine.UI;
 
 #if UNITY_EDITOR
@@ -36,6 +37,7 @@ namespace SpiralPicker
             MinAlpha = .3f,
             MaxAlpha = 1f,
             SlotFacingDirection = FacingDirection.Up,
+            TimeToMove = 1f,
         };
 
         [SerializeField] private ArrowSettings _arrowSettings = new()
@@ -102,15 +104,15 @@ namespace SpiralPicker
                 float radAngle = targetAngle * Mathf.Deg2Rad;
                 var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
                 var targetPosition = posDirection * radius;
-                slot.transform.localPosition = targetPosition;
+                slot.transform.DOLocalMove(targetPosition, _spiralSettings.TimeToMove);
 
                 float rotationZ = FaceObjectAngleDeg(_slotsContainer.localPosition, targetPosition, _spiralSettings.SlotFacingDirection);
-                slot.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
+                slot.transform.DOLocalRotateQuaternion(Quaternion.Euler(0, 0, rotationZ), _spiralSettings.TimeToMove);
                 slot.CompensateForParentRotation(rotationZ);
 
                 
                 float scaleIndex = Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, indexNormalised);
-                slot.transform.localScale = Vector3.one * scaleIndex;
+                slot.transform.DOScale(Vector3.one * scaleIndex, _spiralSettings.TimeToMove);
 
                 // fading of left and right "wings"
                 bool inLeftFadeWing = i < _spiralSettings.WingsSlotsToFade;
@@ -140,9 +142,9 @@ namespace SpiralPicker
         }
 
 
-        private void SpawnSlotsHolders(int wingsSlotsshown, System.Func<Transform, SpiralPickerItem> spawnCallback)
+        private void SpawnSlotsHolders(int wingsSlotsShown, System.Func<Transform, SpiralPickerItem> spawnCallback)
         {
-            var totalSlotsCount = 1 + wingsSlotsshown + wingsSlotsshown;
+            var totalSlotsCount = 1 + wingsSlotsShown + wingsSlotsShown;
 
             _slots = new SpiralPickerItem[totalSlotsCount];
             for (int i = 0; i < totalSlotsCount; i++)
@@ -187,6 +189,9 @@ namespace SpiralPicker
             [Range(0,1)]public float MaxAlpha;
             [Space()]
             public FacingDirection SlotFacingDirection;
+
+            [Header("Animation")] 
+            public float TimeToMove;
         }
 
         [System.Serializable]
