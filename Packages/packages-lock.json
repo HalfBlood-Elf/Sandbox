@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.ol-popov.local-object-pooler": {
+      "version": "https://github.com/HalfBlood-Elf/local-object-pooler.git#upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "303e8b8809dc9e45f567f4e090ae8943dd5b5e59"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
