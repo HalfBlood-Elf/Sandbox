@@ -1,18 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class SpiralPickerItem : MonoBehaviour
+namespace SpiralPicker
 {
-    [SerializeField] private Transform itemImageContainer;
-    [SerializeField] private CanvasGroup canvasGroup;
-    public void CompensateForParentRotation(float angle)
+    public class SpiralPickerItem : MonoBehaviour
     {
-        itemImageContainer.localRotation = Quaternion.Euler(0, 0, -angle);
-    }
+        [SerializeField] private Transform _itemImageContainer;
+        [SerializeField] private CanvasGroup _canvasGroup;
+        public void CompensateForParentRotation(float angle)
+        {
+            _itemImageContainer.localRotation = Quaternion.Euler(0, 0, -angle);
+        }
 
-    public void SetAlpha(float alpha)
-    {
-        canvasGroup.alpha = alpha;
+        public void SetAlpha(float alpha)
+        {
+            _canvasGroup.alpha = alpha;
+        }
     }
 }

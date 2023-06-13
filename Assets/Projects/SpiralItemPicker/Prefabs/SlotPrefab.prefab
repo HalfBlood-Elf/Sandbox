@@ -110,7 +110,7 @@ RectTransform:
   m_Children:
   - {fileID: 4510190687228674458}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -179,8 +179,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f4a5d3114d638f41b43ec9b596e1028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemImageContainer: {fileID: 4933836351359543336}
-  canvasGroup: {fileID: 5086372993218976678}
+  _itemImageContainer: {fileID: 4933836351359543336}
+  _canvasGroup: {fileID: 5086372993218976678}
 --- !u!1 &3736337756094555868
 GameObject:
   m_ObjectHideFlags: 0
