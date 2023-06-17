@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using DG.Tweening;
-using UnityEngine.UI;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,14 +11,7 @@ namespace SpiralPicker
 {
     public class SpiralPickerOld : MonoBehaviour
     {
-
-        public enum FacingDirection
-        {
-            Up = 270,
-            Down = 90,
-            Left = 180,
-            Right = 0
-        }
+        private const float TOLERANCE = 0.1e-5f;
 
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
@@ -51,8 +40,14 @@ namespace SpiralPicker
         [SerializeField] private Transform _slotsContainer;
         [SerializeField] private SpiralPickerItem _slotPrefab;
         [SerializeField] private SpiralPickerItem[] _slots;
+        private float _lastSelectedAngle;
 
         private RectTransform RectTransform => transform as RectTransform;
+
+        private void Update()
+        {
+            UpdateInputDirection(Input.mousePosition);
+        }
 
         private void UpdateInputDirection(Vector3 mousePosition)
         {
@@ -61,18 +56,19 @@ namespace SpiralPicker
             if (inputAngle < 0) inputAngle += 360f;
 
             var halfPadding = _spiralSettings.PaddingDeg / 2f;
-            for (int i = 0; i < _itemsCountBase; i++)
+            for (int selectedAngle = 0; selectedAngle < _itemsCountBase; selectedAngle++)
             {
-                if (inputAngle > halfPadding + (i * _spiralSettings.PaddingDeg)) continue;
-                PlaceSlots(i);
+                if (inputAngle > halfPadding + (selectedAngle * _spiralSettings.PaddingDeg)) continue;
+                if (selectedAngle > _itemsCountBase || selectedAngle < -_itemsCountBase) selectedAngle %= _itemsCountBase;
+                PlaceSlots(selectedAngle * _spiralSettings.PaddingDeg);
                 break;
             }
         }
 
-        private void PlaceSlots(float selectedHour)
+        private void PlaceSlots(float selectedAngle)
         {
-            if (selectedHour > _itemsCountBase || selectedHour < -_itemsCountBase) selectedHour %= _itemsCountBase;
-            var startAngleDeg = _zeroHourAngle + (selectedHour * _spiralSettings.PaddingDeg);
+            if (Math.Abs(_lastSelectedAngle - selectedAngle) < TOLERANCE) return;
+            var startAngleDeg = _zeroHourAngle + selectedAngle;
 
             int rightWingSlotsIndexStart = _slots.Length - _spiralSettings.WingsSlotsToFade - 1;
             for (int i = 0; i < _slots.Length; i++)
@@ -110,6 +106,7 @@ namespace SpiralPicker
             }
 
             HandleArrow(startAngleDeg);
+            _lastSelectedAngle = selectedAngle;
         }
 
         private void HandleArrow(float startAngleDeg)
@@ -156,35 +153,6 @@ namespace SpiralPicker
             return angle;
         }
 
-        [System.Serializable]
-        public struct SpiralSettings
-        {
-            public float MinRadius;
-            public float MaxRadius;
-            public float MinScale;
-            public float MaxScale;
-
-            public float PaddingDeg;
-            [Tooltip("How many items to the left/right of the selected item")]
-            public int WingsSlotsShown;
-            public int WingsSlotsToFade;
-            [Range(0,1)]public float MinAlpha;
-            [Range(0,1)]public float MaxAlpha;
-            [Space()]
-            public FacingDirection SlotFacingDirection;
-
-            [Header("Animation")] 
-            public float TimeToMove;
-        }
-
-        [System.Serializable]
-        public struct ArrowSettings
-        {
-            
-            public float ArrowRotationOffset;
-            public float ArrowRadius;
-            public FacingDirection ArrowFacingDirection;
-        }
 
 #if UNITY_EDITOR
         [CustomEditor(typeof(SpiralPickerOld)), CanEditMultipleObjects]
@@ -233,9 +201,5 @@ namespace SpiralPicker
 
         }
 #endif
-    }
-
-    public interface ISpiralPickerItem
-    {
     }
 }
