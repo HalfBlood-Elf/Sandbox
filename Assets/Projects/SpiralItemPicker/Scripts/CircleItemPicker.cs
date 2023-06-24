@@ -5,17 +5,17 @@ namespace SpiralPicker
 {
     public class CircleItemPicker : MonoBehaviour
     {
-        [SerializeField] private float _zeroHourAngle = -60;
+        [SerializeField] private float _zeroHourAngle = 90;
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
-            MinRadius = 335,
+            CircleRadius = 335,
             PaddingDeg = 30,
             SlotFacingDirection = FacingDirection.Down,
         };
         [SerializeField] private ArrowSettings _arrowSettings = new()
         {
-            ArrowRadius = 235,
-            ArrowRotationOffset = -30,
+            ArrowRadius = 200,
+            ArrowRotationOffset = 0,
             ArrowFacingDirection = FacingDirection.Right
         };
         [SerializeField] private SpiralPickerItem _itemPrefab;
@@ -36,7 +36,7 @@ namespace SpiralPicker
                 float targetAngle = GetSlotAngleDegrees(i);
                 var posDirection = UiDirectionFromAngle(targetAngle);
 
-                float radius = _spiralSettings.MinRadius;
+                float radius = _spiralSettings.CircleRadius;
                 Vector2 targetLocalPosition = posDirection * radius;
                 slot.transform.localPosition = targetLocalPosition;
                 
@@ -62,36 +62,30 @@ namespace SpiralPicker
 
         private void Update()
         {
-            HandleScrollDelta();
-            HandleMousePos();
+            HandleMousePos(Input.mousePosition);
+            HandleInputDelta(Input.mouseScrollDelta.y);
         }
 
-        private void HandleMousePos()
+        private void HandleMousePos(Vector3 mousePos)
         {
-            if (Input.mousePosition == _lastMousePos) return;
-            Vector3 userInputDirection = (Input.mousePosition - _itemContainer.position).normalized;
+            if (mousePos == _lastMousePos) return;
+            Vector3 userInputDirection = (mousePos - _itemContainer.position).normalized;
             var targetSlotDirection = UiDirectionFromAngle(GetSlotAngleDegrees(_currentSelectedIndex));
             var delta = Vector2.SignedAngle(userInputDirection, targetSlotDirection);
             if (Mathf.Abs(delta) < _spiralSettings.PaddingDeg / 2f) return;
-            switch (delta)
-            {
-                case > 0: SelectSlot(_currentSelectedIndex + 1); break;
-                case < 0: SelectSlot(_currentSelectedIndex - 1); break;
-            }
-            _lastMousePos = Input.mousePosition;
+            HandleInputDelta(delta);
+            _lastMousePos = mousePos;
         }
 
-        private void HandleScrollDelta()
+        private void HandleInputDelta(float delta)
         {
-            switch (Input.mouseScrollDelta.y)
+            IndexChangeDirection indexChange = delta switch
             {
-                case > 0f:
-                    SelectSlot(_currentSelectedIndex + 1);
-                    break;
-                case < 0f:
-                    SelectSlot(_currentSelectedIndex - 1);
-                    break;
-            }
+                > 0 => IndexChangeDirection.Next,
+                < 0 => IndexChangeDirection.Previous,
+                _ => IndexChangeDirection.None
+            };
+            if(indexChange is not IndexChangeDirection.None) SelectSlot(_currentSelectedIndex + (int)indexChange);
         }
 
         private float GetSlotAngleDegrees(int slotIndex)
@@ -129,6 +123,13 @@ namespace SpiralPicker
             float angle = Mathf.Atan2(targetPosition.y, targetPosition.x) * Mathf.Rad2Deg;
             angle -= (float)facing;
             return angle;
+        }
+        
+        public enum IndexChangeDirection
+        {
+            None = 0,
+            Next = 1,
+            Previous = -1,
         }
     }
 }

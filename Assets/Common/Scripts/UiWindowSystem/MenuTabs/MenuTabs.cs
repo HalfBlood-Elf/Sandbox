@@ -1,3 +1,4 @@
+using System;
 using LocalObjectPooler;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,45 +10,45 @@ namespace Ui.WindowSystem
 {
     public class MenuTabs : MonoBehaviour
     {
-        [SerializeField] private Transform tabButtonsContainer;
-        [SerializeField] private MenuTabButton tabButtonPrefab;
-        [SerializeField] private ScrollRect scrollRect;
-        [SerializeField] private Tab[] tabs = new Tab[0];
+        [SerializeField] private Transform _tabButtonsContainer;
+        [SerializeField] private MenuTabButton _tabButtonPrefab;
+        [SerializeField] private ScrollRect _scrollRect;
+        [SerializeField] private Tab[] _tabs = Array.Empty<Tab>();
 
-        private RouterCloseAllPrevious windowRouter;
-        private ComponentObjectPooler<MenuTabButton> tabsPooler;
-        protected List<MenuTabButton> activeTabButtons = new();
+        private RouterCloseAllPrevious _windowRouter;
+        private ComponentObjectPooler<MenuTabButton> _tabsPooler;
+        protected readonly List<MenuTabButton> ActiveTabButtons = new();
 
         private void Awake()
         {
-            windowRouter = new(tabs.Select(x => x.window));
-            tabsPooler = new(tabButtonPrefab, tabButtonsContainer);
+            _windowRouter = new(_tabs.Select(x => x.Window));
+            _tabsPooler = new(_tabButtonPrefab, _tabButtonsContainer);
 
-            foreach (var item in tabs)
+            foreach (var item in _tabs)
             {
-                var button = tabsPooler.GetFreeObject();
+                var button = _tabsPooler.GetFreeObject();
                 button.Setup(this, item);
                 button.gameObject.SetActive(true);
                 button.transform.SetAsLastSibling();
-                activeTabButtons.Add(button);
+                ActiveTabButtons.Add(button);
             }
         }
 
         private void OnEnable()
         {
-            scrollRect.viewport.localPosition = Vector3.zero;
+            _scrollRect.viewport.localPosition = Vector3.zero;
 
-            if (tabs?.Length > 0)
+            if (_tabs?.Length > 0)
             {
-                OpenTab(tabs[0].window);
+                OpenTab(_tabs[0].Window);
             }
         }
 
         public void OpenTab(Window tab)
         {
             var targetTabType = tab.GetType();
-            windowRouter.Show(targetTabType.Name);
-            foreach (var item in activeTabButtons)
+            _windowRouter.Show(targetTabType.Name);
+            foreach (var item in ActiveTabButtons)
             {
                 item.SetState(targetTabType == item.TargetTabType);
             }
@@ -56,10 +57,10 @@ namespace Ui.WindowSystem
         [System.Serializable]
         public class Tab
         {
-            [Tooltip("Tab name")] public string name;
-            public Window window;
+            [Tooltip("Tab name")] public string Name;
+            public Window Window;
 
-            //todo: editor onvalidate for buttons with target names
+            //todo: editor OnValidate for buttons with target names
         }
     }
 }

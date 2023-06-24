@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using LocalObjectPooler;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace SpiralPicker
