@@ -15,16 +15,17 @@ namespace SpiralPicker
 
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
+            PaddingDeg = 30,
+            SlotFacingDirection = FacingDirection.Up,
+            
             MinRadius = 263.4f,
             MaxRadius = 479.46f,
             MinScale = .67f,
             MaxScale = 1.33f,
-            PaddingDeg = 30,
             WingsSlotsShown = 7,
             WingsSlotsToFade = 3,
             MinAlpha = .3f,
             MaxAlpha = 1f,
-            SlotFacingDirection = FacingDirection.Up,
             TimeToMove = 1f,
         };
 

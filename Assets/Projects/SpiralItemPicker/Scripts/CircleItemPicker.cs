@@ -5,9 +5,9 @@ namespace SpiralPicker
 {
     public class CircleItemPicker : MonoBehaviour
     {
-        [SerializeField] private float _zeroHourAngle = 90;
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
+            ZeroHourAngle = 90,
             CircleRadius = 335,
             PaddingDeg = 30,
             SlotFacingDirection = FacingDirection.Down,
@@ -33,25 +33,18 @@ namespace SpiralPicker
             {
                 var slot = _slots[i];
                 
-                float targetAngle = GetSlotAngleDegrees(i);
-                var posDirection = UiDirectionFromAngle(targetAngle);
+                float targetAngle = _spiralSettings.GetSlotAngleDegrees(i, BaseSlotsCount);
+                var posDirection = SpiralPickerUtils.UiDirectionFromAngle(targetAngle);
 
                 float radius = _spiralSettings.CircleRadius;
                 Vector2 targetLocalPosition = posDirection * radius;
                 slot.transform.localPosition = targetLocalPosition;
                 
-                float rotationZ = FaceObjectAngleDeg(targetLocalPosition, _spiralSettings.SlotFacingDirection);
+                float rotationZ = SpiralPickerUtils.FaceObjectAngleDeg(targetLocalPosition, _spiralSettings.SlotFacingDirection);
                 slot.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
                 slot.CompensateForParentRotation(rotationZ);
             }
             SelectSlot(0);
-        }
-
-        private static Vector2 UiDirectionFromAngle(float angleDegrees)
-        {
-            float radAngle = angleDegrees * Mathf.Deg2Rad;
-            Vector2 posDirection = new(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
-            return posDirection;
         }
 
         private void Start()
@@ -70,7 +63,7 @@ namespace SpiralPicker
         {
             if (mousePos == _lastMousePos) return;
             Vector3 userInputDirection = (mousePos - _itemContainer.position).normalized;
-            var targetSlotDirection = UiDirectionFromAngle(GetSlotAngleDegrees(_currentSelectedIndex));
+            var targetSlotDirection = SpiralPickerUtils.UiDirectionFromAngle(_spiralSettings.GetSlotAngleDegrees(_currentSelectedIndex, BaseSlotsCount));
             var delta = Vector2.SignedAngle(userInputDirection, targetSlotDirection);
             if (Mathf.Abs(delta) < _spiralSettings.PaddingDeg / 2f) return;
             HandleInputDelta(delta);
@@ -88,12 +81,6 @@ namespace SpiralPicker
             if(indexChange is not IndexChangeDirection.None) SelectSlot(_currentSelectedIndex + (int)indexChange);
         }
 
-        private float GetSlotAngleDegrees(int slotIndex)
-        {
-            var indexCycled = slotIndex % BaseSlotsCount;
-            return (_spiralSettings.PaddingDeg * indexCycled * (int)_spiralSettings.IndexIncrease) + _zeroHourAngle;
-        }
-        
         private void SelectSlot(int selectedIndex)
         {
             if (selectedIndex >= _slots.Length) selectedIndex = 0;
@@ -102,7 +89,7 @@ namespace SpiralPicker
             {
                 _slots[i].SetHovered(i==selectedIndex);
             }
-            HandleArrow(GetSlotAngleDegrees(selectedIndex));
+            HandleArrow(_spiralSettings.GetSlotAngleDegrees(selectedIndex, BaseSlotsCount));
             _currentSelectedIndex = selectedIndex;
         }
 
@@ -114,15 +101,8 @@ namespace SpiralPicker
             var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
             _arrowTransform.localPosition = posDirection * _arrowSettings.ArrowRadius;
             
-            float rotationZ = FaceObjectAngleDeg(_arrowTransform.localPosition, _arrowSettings.ArrowFacingDirection);
+            float rotationZ = SpiralPickerUtils.FaceObjectAngleDeg(_arrowTransform.localPosition, _arrowSettings.ArrowFacingDirection);
             _arrowTransform.localRotation = Quaternion.Euler(0, 0, rotationZ);
-        }
-        
-        private static float FaceObjectAngleDeg(Vector2 targetPosition, FacingDirection facing)
-        {
-            float angle = Mathf.Atan2(targetPosition.y, targetPosition.x) * Mathf.Rad2Deg;
-            angle -= (float)facing;
-            return angle;
         }
         
         public enum IndexChangeDirection

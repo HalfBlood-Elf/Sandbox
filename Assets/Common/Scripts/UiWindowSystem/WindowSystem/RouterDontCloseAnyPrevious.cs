@@ -32,9 +32,9 @@ namespace Ui.WindowSystem
             window.gameObject.SetActive(false);
         }
 
-        public virtual T Show<T>(Action callback = null) where T : Window
+        public virtual T Show<T>(object infoToShow = null, Action callback = null) where T : Window
         {
-            return (T)Show(typeof(T).Name);
+            return (T)Show(typeof(T).Name, infoToShow, callback);
         }
 
         public virtual Window Show(string windowIdentity, object infoToShow = null, Action callback = null)
@@ -51,7 +51,7 @@ namespace Ui.WindowSystem
 
         public virtual T Hide<T>(Action callback = null) where T : Window
         {
-            return (T)Hide(typeof(T).Name);
+            return (T)Hide(typeof(T).Name, callback);
         }
 
         public virtual Window Hide(string windowIdentity, Action callback = null)

@@ -12,7 +12,10 @@ namespace SpiralPicker
         [SerializeField] private Color _normalColor = Color.white;
         [SerializeField] private Color _hoveredColor = Color.white;
         [SerializeField] private Image _itemImage;
+        
         private SetupParameters _currentSetupParameters;
+
+        public SetupParameters CurrentSetupParameters => _currentSetupParameters;
 
         public void CompensateForParentRotation(float angle)
         {
@@ -27,7 +30,9 @@ namespace SpiralPicker
         public void Setup(SetupParameters setupParameters)
         {
             _currentSetupParameters = setupParameters;
-            _itemImage.sprite = _currentSetupParameters.ItemToShow.ItemSprite;
+            if (_currentSetupParameters is null) return;
+            _itemImage.sprite = _currentSetupParameters.ItemToShow?.ItemSprite;
+            _itemImage.color = _currentSetupParameters.ItemToShow?.ItemSprite? Color.white : Color.clear;
         }
 
         void ISetupable.Setup(PoolableItemSetupParameters setupParameters)
@@ -51,6 +56,7 @@ namespace SpiralPicker
             _backgroundImage.color = isHovered? _hoveredColor : _normalColor;
         }
         
+        [System.Serializable]
         public class SetupParameters: PoolableItemSetupParameters
         {
             public int ItemIndex;

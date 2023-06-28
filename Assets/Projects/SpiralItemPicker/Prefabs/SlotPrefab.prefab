@@ -182,7 +182,7 @@ MonoBehaviour:
   _backgroundImage: {fileID: 2424249831408245098}
   _normalColor: {r: 0.14117648, g: 0.14117648, b: 0.14117648, a: 0.54509807}
   _hoveredColor: {r: 0.4433962, g: 0.4101727, b: 0.064836234, a: 0.54509807}
-  _itemImage: {fileID: 0}
+  _itemImage: {fileID: 6191433690234228203}
 --- !u!1 &7390699925886355968
 GameObject:
   m_ObjectHideFlags: 0

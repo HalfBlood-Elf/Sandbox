@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LocalObjectPooler;
 using Ui.WindowSystem;
@@ -6,58 +7,255 @@ using UnityEngine;
 
 namespace SpiralPicker
 {
-    public class SpiralPicker: Window
+    public class SpiralPicker : Window
     {
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
+            ZeroHourAngle = 90,
+            CircleRadius = 335,
             PaddingDeg = 30,
-            SlotFacingDirection = FacingDirection.Up,
+            SlotFacingDirection = FacingDirection.Down,
+            IndexIncrease = IndexIncreaseType.Clockwise,
+
+            MinRadius = 263.4f,
+            MaxRadius = 479.46f,
+            MinScale = .67f,
+            MaxScale = 1.33f,
+            WingsSlotsShown = 7,
+            WingsSlotsToFade = 3,
+            MinAlpha = .3f,
+            MaxAlpha = 1f,
+            TimeToMove = 1f,
         };
+
         [SerializeField] private ArrowSettings _arrowSettings = new()
         {
             ArrowRadius = 235,
             ArrowRotationOffset = -30,
             ArrowFacingDirection = FacingDirection.Right
         };
-        [SerializeField] private uint _minSlotsCount;
+
+        [SerializeField] private int _minSlotsCount = 12;
         [SerializeField] private Transform _arrowTransform;
         [SerializeField] private SpiralPickerItem _itemPrefab;
         [SerializeField] private Transform _itemContainer;
         [SerializeField] private CanvasGroup _cycleStartGroup;
         [SerializeField] private List<SpiralPickerItem> _activeItems = new();
-        
+
         private ShowSettings _showSettings;
+        private int _currentSelectedIndex;
+        private Vector3 _lastMousePos;
+        private ComponentObjectPooler<SpiralPickerItem> _pooler;
+        private SpiralPickerItem _currentSelectedItem;
+        private SetupType _currentSetupType;
 
         protected override void OnSetInfoToShow(object infoToShow)
         {
             base.OnSetInfoToShow(infoToShow);
+            _pooler ??= new(_itemPrefab, _itemContainer);
             if (infoToShow is not ShowSettings showSettings)
             {
+                Debug.LogError($"{GetType()} has no info to show", this);
                 Hide();
                 return;
             }
+
             Setup(showSettings);
         }
-        
+
         private void Setup(ShowSettings showSettings)
         {
             //fill slots (including empty)
-            uint maxIndex = showSettings.ItemsToShow.Max(x => x.SlotId);
-            var itemToShows = new ISpiralPickerItemToShow[maxIndex];
+            showSettings.ItemsToShow ??= Array.Empty<ISpiralPickerItemToShow>();
+            uint maxIndex = (uint)Mathf.Max(
+                showSettings.ItemsToShow.Length > 0
+                    ? showSettings.ItemsToShow.Max(x => x.SlotId)
+                    : 0,
+                _minSlotsCount - 1);
+            var itemToShowFilled = new ISpiralPickerItemToShow[maxIndex + 1];
             for (int i = 0; i < showSettings.ItemsToShow.Length; i++)
             {
-                itemToShows[showSettings.ItemsToShow[i].SlotId] = showSettings.ItemsToShow[i];
+                itemToShowFilled[showSettings.ItemsToShow[i].SlotId] = showSettings.ItemsToShow[i];
             }
-            showSettings.ItemsToShow = itemToShows;
+
+            showSettings.ItemsToShow = itemToShowFilled;
             _showSettings = showSettings;
+
+            SelectSlot(0);
+            _lastMousePos = Input.mousePosition;
         }
-        
+
+        private void SelectSlot(int selectedIndex)
+        {
+            if (selectedIndex >= _showSettings.ItemsToShow.Length)
+            {
+                if (!_showSettings.IsCycled) return;
+                selectedIndex = 0;
+            }
+
+            if (selectedIndex < 0)
+            {
+                if (!_showSettings.IsCycled) return;
+                selectedIndex = _showSettings.ItemsToShow.Length - 1;
+            }
+
+            UpdateSlotPositions();
+            HandleArrow(_spiralSettings.GetSlotAngleDegrees(selectedIndex, _minSlotsCount));
+            _currentSelectedIndex = selectedIndex;
+        }
+
+        private void UpdateSlotPositions()
+        {
+            if (_showSettings.ItemsToShow.Length <= _minSlotsCount)
+            {
+                UpdateAsCircle();
+                return;
+            }
+
+            if (_showSettings.IsCycled) UpdateAsCycledSpiral();
+            else UpdateAsNonCycledSpiral();
+        }
+
+        private void UpdateAsCircle()
+        {
+            SetSlotsCount(_minSlotsCount);
+            SetupAsCircle();
+            for (int i = 0; i < _activeItems.Count; i++)
+            {
+                var slot = _activeItems[i];
+
+                slot.SetHovered(i == _currentSelectedIndex);
+            }
+        }
+
+        private void UpdateAsCycledSpiral()
+        {
+            SetSlotsCount(1 + _spiralSettings.WingsSlotsShown + _spiralSettings.WingsSlotsShown);
+            var infoToShow = new List<SpiralPickerItem.SetupParameters>();
+            //left (of selected slot) wing of slots
+            for (int i = _spiralSettings.WingsSlotsShown; i > 0; i--)
+            {
+                int slotId = _currentSelectedIndex - i;
+                if (slotId < 0) slotId = _showSettings.ItemsToShow.Length - Math.Abs(slotId);
+                infoToShow.Add(new() { ItemIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
+            }
+
+            // currently selected item
+            infoToShow.Add(new()
+                { ItemIndex = _currentSelectedIndex, ItemToShow = _showSettings.ItemsToShow[_currentSelectedIndex] });
+
+            //left (of selected slot) wing of slots
+            for (int i = 1; i <= _spiralSettings.WingsSlotsShown; i++)
+            {
+                int slotId = _currentSelectedIndex + i;
+                if (slotId > _showSettings.ItemsToShow.Length) slotId = slotId - _showSettings.ItemsToShow.Length;
+                infoToShow.Add(new() { ItemIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
+            }
+
+            for (int i = 0; i < _activeItems.Count; i++)
+            {
+                var slot = _activeItems[i];
+                slot.Setup(infoToShow[i]);
+                slot.SetHovered(i == _currentSelectedIndex);
+                float indexNormalised = (float)i / _activeItems.Count;
+                SetSlotPositionInSpiral(
+                    infoToShow[i].ItemIndex,
+                    slot,
+                    Mathf.Lerp(_spiralSettings.MinRadius, _spiralSettings.MaxRadius, 1 - indexNormalised),
+                    Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, 1 - indexNormalised),
+                    Mathf.Lerp(_spiralSettings.MinAlpha, _spiralSettings.MaxAlpha, 1 - indexNormalised)
+                );
+            }
+
+            _currentSetupType = SetupType.SpiralCycled;
+        }
+
+        private void UpdateAsNonCycledSpiral()
+        {
+        }
+
+        private void SetSlotsCount(int count)
+        {
+            var difference = count - _activeItems.Count;
+            if (difference == 0) return;
+            var needToAdd = difference > 0;
+            var needToRemove = difference < 0;
+            for (int i = 0; i < Mathf.Abs(difference); i++)
+            {
+                if (needToAdd)
+                {
+                    var item = _pooler.GetFreeObject();
+                    _activeItems.Add(item);
+                }
+                else if (needToRemove)
+                {
+                    _pooler.ReturnToPool(_activeItems[0]);
+                    _activeItems.RemoveAt(0);
+                }
+            }
+        }
+
+        private void SetupAsCircle()
+        {
+            if (_currentSetupType == SetupType.Circle) return;
+            for (int i = 0; i < _activeItems.Count; i++)
+            {
+                var slot = _activeItems[i];
+
+                SetSlotPositionInSpiral(i, slot, _spiralSettings.CircleRadius, 1, 1);
+
+                slot.Setup(new() { ItemIndex = i, ItemToShow = _showSettings.ItemsToShow[i] });
+            }
+
+            _currentSetupType = SetupType.Circle;
+        }
+
+        private void SetSlotPositionInSpiral(int index, SpiralPickerItem slot, float radius, float scaleFactor, float alpha)
+        {
+            float targetAngle = _spiralSettings.GetSlotAngleDegrees(index, _minSlotsCount);
+            var posDirection = SpiralPickerUtils.UiDirectionFromAngle(targetAngle);
+            Debug.Log($"index: {index} targetAngle: {targetAngle}");
+            slot.transform.localPosition = posDirection * radius;
+
+            float rotationZ = SpiralPickerUtils.FaceObjectAngleDeg(
+                posDirection,
+                _spiralSettings.SlotFacingDirection);
+            slot.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
+            slot.CompensateForParentRotation(rotationZ);
+
+            slot.transform.localScale = Vector3.one * scaleFactor;
+            slot.SetAlpha(Mathf.Clamp01(alpha));
+        }
+
+        private void HandleArrow(float targetAngle)
+        {
+            if (!_arrowTransform) return;
+
+            var radAngle = (targetAngle + _arrowSettings.ArrowRotationOffset) * Mathf.Deg2Rad;
+            var posDirection = new Vector3(Mathf.Cos(radAngle), Mathf.Sin(radAngle));
+            _arrowTransform.localPosition = posDirection * _arrowSettings.ArrowRadius;
+
+            float rotationZ =
+                SpiralPickerUtils.FaceObjectAngleDeg(_arrowTransform.localPosition,
+                    _arrowSettings.ArrowFacingDirection);
+            _arrowTransform.localRotation = Quaternion.Euler(0, 0, rotationZ);
+        }
+
+
         [System.Serializable]
         public struct ShowSettings
         {
             public ISpiralPickerItemToShow[] ItemsToShow;
             public int Index;
             public bool IsCycled;
+        }
+
+        public enum SetupType
+        {
+            None,
+            Circle,
+            SpiralCycled,
+            SpiralNonCycled,
         }
     }
 }
