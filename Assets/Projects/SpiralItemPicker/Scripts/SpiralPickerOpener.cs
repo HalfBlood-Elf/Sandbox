@@ -25,7 +25,7 @@ namespace SpiralPicker
 
         private void Start()
         {
-            _router.Show<SpiralPickerWindow>(new SpiralPicker.ShowSettings{ItemsToShow = _itemsToShow, IsCycled = _isCycled});
+            _router.Show<SpiralPickerWindow>(new SpiralPickerWindow.WindowShowSettings{ItemsToShow = _itemsToShow, IsCycled = _isCycled});
         }
         
         [System.Serializable]
