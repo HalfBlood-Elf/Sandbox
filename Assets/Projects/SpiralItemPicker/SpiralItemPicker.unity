@@ -2306,8 +2306,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02cbbb3602bd4ad9a24ccbd3603f1b79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _useMousePos: 0
-  _useScrollWheel: 1
+  _useMousePos: 1
+  _useScrollWheel: 0
   _useDiscreteButtons: 1
 --- !u!224 &440895803 stripped
 RectTransform:
@@ -8054,7 +8054,7 @@ MonoBehaviour:
   - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 5485e2f56028a3c4cb54f5caa167377e,
       type: 3}
     <SlotId>k__BackingField: 10
-  - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 631d8d71fc1410145a0156ad2a960884,
+  - <ItemSprite>k__BackingField: {fileID: 21300000, guid: fa94ca401f914704391efb66993ba276,
       type: 3}
     <SlotId>k__BackingField: 13
   _spiralPickerWindow: {fileID: 438452594}
