@@ -46,11 +46,6 @@ namespace SpiralPicker
             _backgroundImage.color = _normalColor;
         }
 
-        public void OnActivate()
-        {
-            _currentSetupParameters?.ItemToShow.SlotSelectedCallback?.Invoke();
-        }
-
         public void SetHovered(bool isHovered)
         {
             _backgroundImage.color = isHovered? _hoveredColor : _normalColor;

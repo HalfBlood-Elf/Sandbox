@@ -25,7 +25,7 @@ namespace SpiralPicker
         private int _currentSelectedIndex;
         private Vector3 _lastMousePos;
 
-        private int BaseSlotsCount => _slots.Length;
+        private ushort BaseSlotsCount => (ushort)_slots.Length;
         
         private void OnValidate()
         {

@@ -2174,6 +2174,8 @@ GameObject:
   m_Component:
   - component: {fileID: 438452592}
   - component: {fileID: 438452593}
+  - component: {fileID: 438452594}
+  - component: {fileID: 438452595}
   m_Layer: 5
   m_Name: SpiralPicker2
   m_TagString: Untagged
@@ -2216,8 +2218,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 933e51ee250048f58cb79eba3b7c235b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnShow: {fileID: 0}
-  OnHide: {fileID: 0}
   _spiralSettings:
     ZeroHourAngle: 90
     SlotFacingDirection: 90
@@ -2244,6 +2244,34 @@ MonoBehaviour:
   _itemContainer: {fileID: 2135420492}
   _cycleStartGroup: {fileID: 0}
   _activeItems: []
+--- !u!114 &438452594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438452591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d0c271bc8a439f9e7cb33640688bda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnShow: {fileID: 0}
+  OnHide: {fileID: 0}
+  _spiralPicker: {fileID: 438452593}
+  _inputProvider: {fileID: 438452595}
+--- !u!114 &438452595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438452591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02cbbb3602bd4ad9a24ccbd3603f1b79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &440895803 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1143974535648966325, guid: 2f62bb32d30dde047931c11c6963658b,
@@ -7992,7 +8020,7 @@ MonoBehaviour:
   - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 631d8d71fc1410145a0156ad2a960884,
       type: 3}
     <SlotId>k__BackingField: 13
-  _spiralPickerWindow: {fileID: 438452593}
+  _spiralPickerWindow: {fileID: 438452594}
 --- !u!1001 &1765228178
 PrefabInstance:
   m_ObjectHideFlags: 0

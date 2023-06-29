@@ -27,7 +27,7 @@ namespace SpiralPicker
         public float TimeToMove;
         
         
-        public float GetSlotAngleDegrees(int slotIndex, int baseSlotsCount)
+        public float GetSlotAngleDegrees(int slotIndex, ushort baseSlotsCount)
         {
             int indexCycled = slotIndex % baseSlotsCount;
             return (PaddingDeg * indexCycled * (int)IndexIncrease) + ZeroHourAngle;

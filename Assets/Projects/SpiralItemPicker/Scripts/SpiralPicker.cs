@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using LocalObjectPooler;
-using Ui.WindowSystem;
 using UnityEngine;
 
 namespace SpiralPicker
 {
-    public class SpiralPicker : Window
+    public class SpiralPicker: MonoBehaviour
     {
         [SerializeField] private SpiralSettings _spiralSettings = new()
         {
@@ -35,7 +33,7 @@ namespace SpiralPicker
             ArrowFacingDirection = FacingDirection.Right
         };
 
-        [SerializeField] private int _minSlotsCount = 12;
+        [SerializeField] private ushort _minSlotsCount = 12;
         [SerializeField] private Transform _arrowTransform;
         [SerializeField] private SpiralPickerItem _itemPrefab;
         [SerializeField] private Transform _itemContainer;
@@ -44,48 +42,21 @@ namespace SpiralPicker
 
         private ShowSettings _showSettings;
         private int _currentSelectedIndex;
-        private Vector3 _lastMousePos;
         private ComponentObjectPooler<SpiralPickerItem> _pooler;
         private SpiralPickerItem _currentSelectedItem;
         private SetupType _currentSetupType;
 
-        protected override void OnSetInfoToShow(object infoToShow)
+        public ushort MinSlotsCount => _minSlotsCount;
+        public int CurrentSelectedIndex => _currentSelectedIndex;
+        public SpiralSettings SpiralSettings => _spiralSettings;
+
+        public void Setup(ShowSettings showSettings)
         {
-            base.OnSetInfoToShow(infoToShow);
-            _pooler ??= new(_itemPrefab, _itemContainer);
-            if (infoToShow is not ShowSettings showSettings)
-            {
-                Debug.LogError($"{GetType()} has no info to show", this);
-                Hide();
-                return;
-            }
-
-            Setup(showSettings);
-        }
-
-        private void Setup(ShowSettings showSettings)
-        {
-            //fill slots (including empty)
-            showSettings.ItemsToShow ??= Array.Empty<ISpiralPickerItemToShow>();
-            uint maxIndex = (uint)Mathf.Max(
-                showSettings.ItemsToShow.Length > 0
-                    ? showSettings.ItemsToShow.Max(x => x.SlotId)
-                    : 0,
-                _minSlotsCount - 1);
-            var itemToShowFilled = new ISpiralPickerItemToShow[maxIndex + 1];
-            for (int i = 0; i < showSettings.ItemsToShow.Length; i++)
-            {
-                itemToShowFilled[showSettings.ItemsToShow[i].SlotId] = showSettings.ItemsToShow[i];
-            }
-
-            showSettings.ItemsToShow = itemToShowFilled;
             _showSettings = showSettings;
-
             SelectSlot(0);
-            _lastMousePos = Input.mousePosition;
         }
 
-        private void SelectSlot(int selectedIndex)
+        public void SelectSlot(int selectedIndex)
         {
             if (selectedIndex >= _showSettings.ItemsToShow.Length)
             {
@@ -179,6 +150,7 @@ namespace SpiralPicker
 
         private void SetSlotsCount(int count)
         {
+            _pooler ??= new(_itemPrefab, _itemContainer);
             var difference = count - _activeItems.Count;
             if (difference == 0) return;
             var needToAdd = difference > 0;
@@ -249,11 +221,10 @@ namespace SpiralPicker
         public struct ShowSettings
         {
             public ISpiralPickerItemToShow[] ItemsToShow;
-            public int Index;
             public bool IsCycled;
         }
 
-        public enum SetupType
+        private enum SetupType
         {
             None,
             Circle,
