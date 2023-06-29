@@ -138,7 +138,7 @@ namespace SpiralPicker
                 int slotId = _currentSelectedIndex - i;
                 if (slotId < 0) slotId = _minSlotsCount - Math.Abs(slotId);
                 var itemIndex = _showSettings.ItemsToShow.Length - Math.Abs(slotId);
-                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[itemIndex] });
+                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[itemIndex], WingId = -i});
             }
 
             // currently selected item
@@ -151,7 +151,7 @@ namespace SpiralPicker
                 int slotId = _currentSelectedIndex + i;
                 var itemIndex = slotId > _showSettings.ItemsToShow.Length? slotId - _showSettings.ItemsToShow.Length: slotId;
                 if (slotId > _minSlotsCount) slotId = slotId - _minSlotsCount;
-                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
+                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId], WingId = i});
             }
 
             for (int i = 0; i < _activeItems.Count; i++)
@@ -159,13 +159,14 @@ namespace SpiralPicker
                 var slot = _activeItems[i];
                 slot.Setup(infoToShow[i]);
                 slot.SetHovered(infoToShow[i].ItemIndex == _currentSelectedIndex);
-                float indexNormalised = (float)i / _activeItems.Count;
+                float inverseIndexNormalised = 1 - (float)i / _activeItems.Count;
+                float inverseWingIndexNormalized = 1 - Mathf.Abs((float)infoToShow[i].WingId) / _spiralSettings.WingsSlotsShown;
                 SetSlotPositionInSpiral(
                     infoToShow[i].HeadingIndex,
                     slot,
-                    Mathf.Lerp(_spiralSettings.MinRadius, _spiralSettings.MaxRadius, 1 - indexNormalised),
-                    Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, 1 - indexNormalised),
-                    Mathf.Lerp(_spiralSettings.MinAlpha, _spiralSettings.MaxAlpha, 1 - indexNormalised)
+                    Mathf.Lerp(_spiralSettings.MinRadius, _spiralSettings.MaxRadius, inverseIndexNormalised),
+                    Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, inverseIndexNormalised),
+                    Mathf.Lerp(_spiralSettings.MinAlpha, _spiralSettings.MaxAlpha, inverseWingIndexNormalized)
                 );
             }
 

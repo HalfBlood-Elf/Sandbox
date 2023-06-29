@@ -61,6 +61,7 @@ namespace SpiralPicker
         {
             public int ItemIndex;
             public int HeadingIndex;
+            public int WingId;
             public ISpiralPickerItemToShow ItemToShow;
         }
     }
