@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LocalObjectPooler;
 using UnityEngine;
 
@@ -33,6 +32,8 @@ namespace SpiralPicker
             ArrowFacingDirection = FacingDirection.Right
         };
 
+        [SerializeField] private DebugShowSettings _debugShowSettings;
+
         [SerializeField] private ushort _minSlotsCount = 12;
         [SerializeField] private Transform _arrowTransform;
         [SerializeField] private SpiralPickerItem _itemPrefab;
@@ -43,8 +44,8 @@ namespace SpiralPicker
         private ShowSettings _showSettings;
         private int _currentSelectedIndex;
         private ComponentObjectPooler<SpiralPickerItem> _pooler;
-        private SpiralPickerItem _currentSelectedItem;
         private SetupType _currentSetupType;
+        private int _leastCommonMultiple;
 
         public ushort MinSlotsCount => _minSlotsCount;
         public int CurrentSelectedIndex => _currentSelectedIndex;
@@ -53,26 +54,26 @@ namespace SpiralPicker
         public void Setup(ShowSettings showSettings)
         {
             _showSettings = showSettings;
-            SelectSlot(0);
+            _leastCommonMultiple = SpiralPickerUtils.Lcm(showSettings.ItemsToShow.Length, _minSlotsCount);
+            SelectSlot(showSettings.StartIndex);
         }
 
         public void SelectSlot(int selectedIndex)
         {
-            if (selectedIndex >= _showSettings.ItemsToShow.Length)
+            selectedIndex %= _leastCommonMultiple;
+            if (selectedIndex >= _showSettings.ItemsToShow.Length && !_showSettings.IsCycled)
             {
-                if (!_showSettings.IsCycled) return;
+                selectedIndex = _showSettings.ItemsToShow.Length;
+            }
+
+            if (selectedIndex < 0 && !_showSettings.IsCycled)
+            {
                 selectedIndex = 0;
             }
-
-            if (selectedIndex < 0)
-            {
-                if (!_showSettings.IsCycled) return;
-                selectedIndex = _showSettings.ItemsToShow.Length - 1;
-            }
-
+            _currentSelectedIndex = selectedIndex;
+            
             UpdateSlotPositions();
             HandleArrow(_spiralSettings.GetSlotAngleDegrees(selectedIndex, _minSlotsCount));
-            _currentSelectedIndex = selectedIndex;
         }
 
         private void UpdateSlotPositions()
@@ -95,7 +96,7 @@ namespace SpiralPicker
             {
                 var slot = _activeItems[i];
 
-                slot.SetHovered(i == _currentSelectedIndex);
+                slot.SetHovered(i == GetItemIndex(_currentSelectedIndex));
             }
         }
 
@@ -106,30 +107,43 @@ namespace SpiralPicker
             //left (of selected slot) wing of slots
             for (int i = _spiralSettings.WingsSlotsShown; i > 0; i--)
             {
-                int slotId = _currentSelectedIndex - i;
-                if (slotId < 0) slotId = _minSlotsCount - Math.Abs(slotId);
-                var itemIndex = _showSettings.ItemsToShow.Length - Math.Abs(slotId);
-                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[itemIndex], WingId = -i});
+                int index = _currentSelectedIndex - i;
+                int itemIndex = GetItemIndex(index);
+                infoToShow.Add(new()
+                {
+                    ItemIndex = itemIndex,
+                    HeadingIndex = GetHeadingIndex(index),
+                    ItemToShow = _showSettings.ItemsToShow[itemIndex],
+                    WingId = -i
+                });
             }
 
             // currently selected item
             infoToShow.Add(new()
-                { ItemIndex = _currentSelectedIndex, HeadingIndex = _currentSelectedIndex, ItemToShow = _showSettings.ItemsToShow[_currentSelectedIndex] });
+            {
+                ItemIndex = GetItemIndex(_currentSelectedIndex),
+                HeadingIndex = GetHeadingIndex(_currentSelectedIndex),
+                ItemToShow = _showSettings.ItemsToShow[GetItemIndex(_currentSelectedIndex)]
+            });
 
             //left (of selected slot) wing of slots
             for (int i = 1; i <= _spiralSettings.WingsSlotsShown; i++)
             {
-                int slotId = _currentSelectedIndex + i;
-                var itemIndex = slotId > _showSettings.ItemsToShow.Length? slotId - _showSettings.ItemsToShow.Length: slotId;
-                if (slotId > _minSlotsCount) slotId = slotId - _minSlotsCount;
-                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId], WingId = i});
-            }
+                int index = _currentSelectedIndex + i;
+                int itemIndex = GetItemIndex(index);
+                infoToShow.Add(new()
+                {
+                    ItemIndex = itemIndex,
+                    HeadingIndex = GetHeadingIndex(index),
+                    ItemToShow = _showSettings.ItemsToShow[itemIndex],
+                    WingId = i
+                });}
 
             for (int i = 0; i < _activeItems.Count; i++)
             {
                 var slot = _activeItems[i];
                 slot.Setup(infoToShow[i]);
-                slot.SetHovered(infoToShow[i].ItemIndex == _currentSelectedIndex);
+                slot.SetHovered(infoToShow[i].ItemIndex == GetItemIndex(_currentSelectedIndex));
                 float inverseIndexNormalised = 1 - (float)i / _activeItems.Count;
                 float inverseWingIndexNormalized = 1 - Mathf.Abs((float)infoToShow[i].WingId) / _spiralSettings.WingsSlotsShown;
                 SetSlotPositionInSpiral(
@@ -170,6 +184,22 @@ namespace SpiralPicker
             }
         }
 
+        private int GetHeadingIndex(int index)
+        {
+            index %= _minSlotsCount;
+            if (index < 0) return _minSlotsCount - Mathf.Abs(index);
+            if (index > _minSlotsCount) return index - _minSlotsCount;
+            return index;
+        }
+        
+        private int GetItemIndex(int index)
+        {
+            index %= _showSettings.ItemsToShow.Length;
+            if (index < 0) return _showSettings.ItemsToShow.Length - Mathf.Abs(index);
+            if (index > _showSettings.ItemsToShow.Length) return index - _showSettings.ItemsToShow.Length;
+            return index;
+        }
+
         private void SetupAsCircle()
         {
             if (_currentSetupType == SetupType.Circle) return;
@@ -189,7 +219,6 @@ namespace SpiralPicker
         {
             float targetAngle = _spiralSettings.GetSlotAngleDegrees(index, _minSlotsCount);
             var posDirection = SpiralPickerUtils.UiDirectionFromAngle(targetAngle);
-            Debug.Log($"index: {index} targetAngle: {targetAngle}");
             slot.transform.localPosition = posDirection * radius;
 
             float rotationZ = SpiralPickerUtils.FaceObjectAngleDeg(
@@ -215,13 +244,14 @@ namespace SpiralPicker
                     _arrowSettings.ArrowFacingDirection);
             _arrowTransform.localRotation = Quaternion.Euler(0, 0, rotationZ);
         }
-
+        
 
         [System.Serializable]
         public struct ShowSettings
         {
             public ISpiralPickerItemToShow[] ItemsToShow;
             public bool IsCycled;
+            public int StartIndex;
         }
 
         private enum SetupType

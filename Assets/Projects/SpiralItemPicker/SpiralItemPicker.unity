@@ -2237,6 +2237,40 @@ MonoBehaviour:
     ArrowRotationOffset: 0
     ArrowRadius: 200
     ArrowFacingDirection: 0
+  _debugShowSettings:
+    IsCycled: 1
+    ItemsToShow:
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: eb5f6e2757c821940b69cf1456f7865a,
+        type: 3}
+      <SlotId>k__BackingField: 0
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: fde2e72a74f540e4b82bb0f5e6a553ee,
+        type: 3}
+      <SlotId>k__BackingField: 1
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 49b611e658efbf443b686a4036f74fe3,
+        type: 3}
+      <SlotId>k__BackingField: 2
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 5b1a64ea234fb2343b8d0686c51280de,
+        type: 3}
+      <SlotId>k__BackingField: 3
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: a3983c59ebf804b4abba687bd7c9e92f,
+        type: 3}
+      <SlotId>k__BackingField: 4
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 9d7c6e4896067aa4fa512a00f692ac1c,
+        type: 3}
+      <SlotId>k__BackingField: 6
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 0c6271a290ef75b4c97d58746c86c5b8,
+        type: 3}
+      <SlotId>k__BackingField: 7
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: a94c9a7eb94ceec4a8d67a1890e22e51,
+        type: 3}
+      <SlotId>k__BackingField: 8
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 5485e2f56028a3c4cb54f5caa167377e,
+        type: 3}
+      <SlotId>k__BackingField: 10
+    - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 631d8d71fc1410145a0156ad2a960884,
+        type: 3}
+      <SlotId>k__BackingField: 13
+    StartIndex: 0
   _minSlotsCount: 12
   _arrowTransform: {fileID: 753464078}
   _itemPrefab: {fileID: 5443274157245600127, guid: 2f62bb32d30dde047931c11c6963658b,
@@ -2272,6 +2306,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02cbbb3602bd4ad9a24ccbd3603f1b79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _useMousePos: 0
+  _useScrollWheel: 1
+  _useDiscreteButtons: 1
 --- !u!224 &440895803 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1143974535648966325, guid: 2f62bb32d30dde047931c11c6963658b,
@@ -7993,7 +8030,7 @@ MonoBehaviour:
   - <ItemSprite>k__BackingField: {fileID: 21300000, guid: eb5f6e2757c821940b69cf1456f7865a,
       type: 3}
     <SlotId>k__BackingField: 0
-  - <ItemSprite>k__BackingField: {fileID: 21300000, guid: f588d850485d0ae479d73cf3bd0b7b00,
+  - <ItemSprite>k__BackingField: {fileID: 21300000, guid: fde2e72a74f540e4b82bb0f5e6a553ee,
       type: 3}
     <SlotId>k__BackingField: 1
   - <ItemSprite>k__BackingField: {fileID: 21300000, guid: 49b611e658efbf443b686a4036f74fe3,

@@ -5,10 +5,23 @@ namespace SpiralPicker
 {
     public class InputManagerProvider: MonoInputProvider
     {
+        [SerializeField] private bool _useMousePos;
+        [SerializeField] private bool _useScrollWheel;
+        [SerializeField] private bool _useDiscreteButtons;
         private void Update()
         {
-            HandleMousePos(Input.mousePosition);
-            HandleInputDelta(Input.mouseScrollDelta.y);
+            if(_useMousePos) HandleMousePos(Input.mousePosition);
+            if(_useScrollWheel) HandleInputDelta(Input.mouseScrollDelta.y);
+            if (_useDiscreteButtons) HandleDiscreteButtons();
+        }
+
+        private void HandleDiscreteButtons()
+        {
+            var indexChange = IInputProvider.IndexChangeDirection.None;
+            if (Input.GetMouseButtonDown(0)) indexChange = IInputProvider.IndexChangeDirection.Previous;
+            if (Input.GetMouseButtonDown(1)) indexChange = IInputProvider.IndexChangeDirection.Next;
+            var currentIndex = _indexGetter();
+            if(indexChange is not IInputProvider.IndexChangeDirection.None) _slotSelector(currentIndex + (int)indexChange);
         }
 
         private void HandleMousePos(Vector3 mousePos)
