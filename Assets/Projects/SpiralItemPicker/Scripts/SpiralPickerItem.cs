@@ -60,6 +60,7 @@ namespace SpiralPicker
         public class SetupParameters: PoolableItemSetupParameters
         {
             public int ItemIndex;
+            public int HeadingIndex;
             public ISpiralPickerItemToShow ItemToShow;
         }
     }

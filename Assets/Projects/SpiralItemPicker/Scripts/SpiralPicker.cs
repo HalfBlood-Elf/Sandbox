@@ -136,30 +136,32 @@ namespace SpiralPicker
             for (int i = _spiralSettings.WingsSlotsShown; i > 0; i--)
             {
                 int slotId = _currentSelectedIndex - i;
-                if (slotId < 0) slotId = _showSettings.ItemsToShow.Length - Math.Abs(slotId);
-                infoToShow.Add(new() { ItemIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
+                if (slotId < 0) slotId = _minSlotsCount - Math.Abs(slotId);
+                var itemIndex = _showSettings.ItemsToShow.Length - Math.Abs(slotId);
+                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[itemIndex] });
             }
 
             // currently selected item
             infoToShow.Add(new()
-                { ItemIndex = _currentSelectedIndex, ItemToShow = _showSettings.ItemsToShow[_currentSelectedIndex] });
+                { ItemIndex = _currentSelectedIndex, HeadingIndex = _currentSelectedIndex, ItemToShow = _showSettings.ItemsToShow[_currentSelectedIndex] });
 
             //left (of selected slot) wing of slots
             for (int i = 1; i <= _spiralSettings.WingsSlotsShown; i++)
             {
                 int slotId = _currentSelectedIndex + i;
-                if (slotId > _showSettings.ItemsToShow.Length) slotId = slotId - _showSettings.ItemsToShow.Length;
-                infoToShow.Add(new() { ItemIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
+                var itemIndex = slotId > _showSettings.ItemsToShow.Length? slotId - _showSettings.ItemsToShow.Length: slotId;
+                if (slotId > _minSlotsCount) slotId = slotId - _minSlotsCount;
+                infoToShow.Add(new() { ItemIndex = itemIndex, HeadingIndex = slotId, ItemToShow = _showSettings.ItemsToShow[slotId] });
             }
 
             for (int i = 0; i < _activeItems.Count; i++)
             {
                 var slot = _activeItems[i];
                 slot.Setup(infoToShow[i]);
-                slot.SetHovered(i == _currentSelectedIndex);
+                slot.SetHovered(infoToShow[i].ItemIndex == _currentSelectedIndex);
                 float indexNormalised = (float)i / _activeItems.Count;
                 SetSlotPositionInSpiral(
-                    infoToShow[i].ItemIndex,
+                    infoToShow[i].HeadingIndex,
                     slot,
                     Mathf.Lerp(_spiralSettings.MinRadius, _spiralSettings.MaxRadius, 1 - indexNormalised),
                     Mathf.Lerp(_spiralSettings.MinScale, _spiralSettings.MaxScale, 1 - indexNormalised),
@@ -204,7 +206,7 @@ namespace SpiralPicker
 
                 SetSlotPositionInSpiral(i, slot, _spiralSettings.CircleRadius, 1, 1);
 
-                slot.Setup(new() { ItemIndex = i, ItemToShow = _showSettings.ItemsToShow[i] });
+                slot.Setup(new() { HeadingIndex = i, ItemToShow = _showSettings.ItemsToShow[i] });
             }
 
             _currentSetupType = SetupType.Circle;
