@@ -22,7 +22,7 @@ namespace Ui.WindowSystem
         private void Awake()
         {
             _windowRouter = new(_tabs.Select(x => x.Window));
-            _tabsPooler = new(_tabButtonPrefab, _tabButtonsContainer);
+            _tabsPooler = new(new Factory<MenuTabButton>(_tabButtonPrefab, _tabButtonsContainer));
 
             foreach (var item in _tabs)
             {

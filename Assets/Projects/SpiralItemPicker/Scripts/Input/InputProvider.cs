@@ -33,7 +33,7 @@ namespace SpiralPicker
             var baseCount = _baseCountGetter();
             var targetSlotDirection = SpiralPickerUtils.UiDirectionFromAngle(spiralSettings.GetSlotAngleDegrees(currentIndex, baseCount));
             var delta = Vector2.SignedAngle(userInputDirection, targetSlotDirection);
-            if (Mathf.Abs(delta) < spiralSettings.PaddingDeg / 2f) return;
+            if (Mathf.Abs(delta) < spiralSettings.SpacingDegrees / 2f) return;
             HandleInputDelta(delta);
             _lastMousePos = mousePos;
         }

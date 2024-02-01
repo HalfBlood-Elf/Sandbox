@@ -27,11 +27,8 @@ namespace SpiralPicker
                 () => _spiralPicker.MinSlotsCount,
                 _spiralPicker.SelectSlot
             );
-            _inputProvider.InputChanged += InputProviderOnInputChanged;
         }
-
-
-
+        
         private void Setup(WindowShowSettings showSettings)
         {
             //fill slots (including empty)
@@ -54,10 +51,6 @@ namespace SpiralPicker
             });
         }
         
-        private void InputProviderOnInputChanged(IInputProvider.IndexChangeDirection obj)
-        {
-        }
-
         [System.Serializable]
         public struct WindowShowSettings
         {

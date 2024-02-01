@@ -10,7 +10,7 @@ namespace SpiralPicker
         {
             ZeroHourAngle = 90,
             CircleRadius = 335,
-            PaddingDeg = 30,
+            SpacingDegrees = 30,
             SlotFacingDirection = FacingDirection.Down,
             IndexIncrease = IndexIncreaseType.Clockwise,
 
@@ -55,6 +55,7 @@ namespace SpiralPicker
         {
             _showSettings = showSettings;
             _leastCommonMultiple = SpiralPickerUtils.Lcm(showSettings.ItemsToShow.Length, _minSlotsCount);
+            _activeItems.Clear();
             SelectSlot(showSettings.StartIndex);
         }
 
@@ -164,7 +165,7 @@ namespace SpiralPicker
 
         private void SetSlotsCount(int count)
         {
-            _pooler ??= new(_itemPrefab, _itemContainer);
+            _pooler ??= new(new Factory<SpiralPickerItem>(_itemPrefab, _itemContainer));
             var difference = count - _activeItems.Count;
             if (difference == 0) return;
             var needToAdd = difference > 0;

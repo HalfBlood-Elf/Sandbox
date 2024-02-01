@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SpiralPicker
 {
@@ -8,7 +9,7 @@ namespace SpiralPicker
         public float ZeroHourAngle;
         public FacingDirection SlotFacingDirection;
         public IndexIncreaseType IndexIncrease;
-        public float PaddingDeg;
+        [FormerlySerializedAs("PaddingDeg")] public float SpacingDegrees;
 
         public float CircleRadius;
         
@@ -30,7 +31,7 @@ namespace SpiralPicker
         public float GetSlotAngleDegrees(int slotIndex, ushort baseSlotsCount)
         {
             int indexCycled = slotIndex % baseSlotsCount;
-            return (PaddingDeg * indexCycled * (int)IndexIncrease) + ZeroHourAngle;
+            return (SpacingDegrees * indexCycled * (int)IndexIncrease) + ZeroHourAngle;
         }
     }
 
