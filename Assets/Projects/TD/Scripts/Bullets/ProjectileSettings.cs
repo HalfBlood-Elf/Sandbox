@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ProjectileSettings", menuName = "ScriptableObjects/ProjectileSettings", order = 1)]
+[CreateAssetMenu(fileName = nameof(ProjectileSettings), menuName = "ScriptableObject/Projects/TD/"+nameof(ProjectileSettings), order = 1)]
 public class ProjectileSettings: ScriptableObject
 {
 	public float onHitDmg = 20;
