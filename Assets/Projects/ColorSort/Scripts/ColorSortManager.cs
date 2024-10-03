@@ -44,11 +44,12 @@ namespace Projects.ColorSort
                 _bottlePool.ReturnToPool(bottle);
             }
             _activeBottles.Clear();
-            foreach (var dataBottle in _currentLevel.Bottles)
+            for (int i = 0; i < _currentLevel.Bottles.Count; i++)
             {
                 var bottle = _bottlePool.GetFreeObject();
-                bottle.Setup(dataBottle);
+                bottle.Setup(_currentLevel.Bottles[i]);
                 _activeBottles.Add(bottle);
+                bottle.transform.SetSiblingIndex(i);
             }
         }
 
