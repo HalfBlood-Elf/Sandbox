@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 
-namespace IncomeGame
+namespace Projects.IncomeGame
 {
     public class TowerDragging : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler,
     IPointerEnterHandler, IPointerExitHandler

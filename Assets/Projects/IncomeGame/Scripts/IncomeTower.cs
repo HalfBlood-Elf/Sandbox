@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Zenject;
 
-namespace IncomeGame
+namespace Projects.IncomeGame
 {
     [RequireComponent(typeof(Animator))]
     public class IncomeTower : MonoBehaviour, IDropHandler
     {
-        public int level = 1;
-        public int maxLevel = 4;
-        public List<Sprite> levelSprites;
+        public int level = 0;
 
         public int price = 200;
         public int income;
@@ -23,7 +22,14 @@ namespace IncomeGame
         private float _timer;
         private Animator _anim;
         private Image _image;
+        private GameSettings _gameSettings;
 
+        [Inject]
+        private void Construct(GameSettings gameSettings)
+        {
+            _gameSettings = gameSettings;
+        }
+        
         private void Start()
         {
             _image = GetComponent<Image>();
@@ -56,10 +62,10 @@ namespace IncomeGame
 
         private void CombineTowers(IncomeTower droppedTower)
         {
-            if (droppedTower.level == this.level)
+            if (droppedTower.level == this.level && this.level < _gameSettings.MaxLevel)
             {
                 this.level++;
-                _image.sprite = levelSprites[level - 1];
+                _image.sprite = _gameSettings.GetLevelSprite(level - 1);
                 price += droppedTower.price;
                 income = Mathf.RoundToInt(income * 2.5f);
                 frequency /= 1.1f;
@@ -68,7 +74,7 @@ namespace IncomeGame
 
                 Destroy(droppedTower.gameObject);
             }
-            else if (droppedTower.level < this.level)
+            else if (droppedTower.level < this.level && _gameSettings.CanCombineDifferentLevel)
             {
                 price += droppedTower.price;
 

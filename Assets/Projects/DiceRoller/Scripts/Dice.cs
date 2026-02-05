@@ -35,7 +35,7 @@ namespace DiceRoller
 
 		private void Update()
 		{
-			isMoving = rigidbody.velocity.sqrMagnitude >= 0.0001 || rigidbody.angularVelocity.sqrMagnitude >= 0.0001;
+			isMoving = rigidbody.linearVelocity.sqrMagnitude >= 0.0001 || rigidbody.angularVelocity.sqrMagnitude >= 0.0001;
 			if(normalMat != null && movingMat != null)
 			{
 				renderer.material = (isMoving) ? movingMat : normalMat;
